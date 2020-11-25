@@ -1,6 +1,6 @@
-const firebase = require("firebase");
-require("firebase/firestore");
+import firebase from "firebase"
+import "firebase/firestore";
 
-import { apiKey, authDomain, projectId } from "./projectConfig"
+import { apiKey, authDomain, projectId } from "./projectConfig.js"
 
-console.log(apiKey)
+console.log(apiKey);
