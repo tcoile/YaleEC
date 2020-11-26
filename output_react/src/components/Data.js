@@ -1,6 +1,5 @@
 import React from "react";
 import * as d3 from "d3";
-import {db} from "../firebase";
 import cloneDeep from "lodash/cloneDeep";
 // import Chip from '@material-ui/core/Chip';
 
@@ -54,10 +53,57 @@ class Data extends React.Component {
         const groupDataArray = Array.from(groupedData, ([key, value]) => ({ key, value }));
         console.log(groupedData);
         console.log(groupDataArray);
-        // TODO: Check for supersets
-        // groupDataArray.forEach((group) => {
 
-        // })
+        // TODO: Check for supersets
+        let i = 0; 
+        while(i < groupDataArray.length - 1) {
+            let subsumed = false;
+            for(let j = i + 1; j < groupDataArray.length; j++) {
+                let smallArrayIndex, largeArrayIndex;
+                if(groupDataArray[i].value.length <= groupDataArray[j].value.length) {
+                    smallArrayIndex = i;
+                    largeArrayIndex = j;
+                } else {
+                    smallArrayIndex = j;
+                    largeArrayIndex = i;
+                }
+                let smallArray = groupDataArray[smallArrayIndex].value;
+                let largeArray = groupDataArray[largeArrayIndex].value;
+                let smallInLarge = true;
+                for(let smallIterator = 0; smallIterator < smallArray.length; smallIterator++) {
+                    let smallElementInLarge = false;
+                    for(let largeIterator = 0; largeIterator < largeArray.length; largeIterator++) {
+                        if(smallArray[smallIterator].name === largeArray[largeIterator].name) {
+                            smallElementInLarge = true;
+                            break;
+                        }
+                    }
+                    smallInLarge = smallElementInLarge;
+                    if(!smallInLarge) {
+                        break;
+                    }
+                }
+                if(smallInLarge) {
+                    groupDataArray.splice(smallArrayIndex, 1);
+                    if(smallArrayIndex < largeArrayIndex) {
+                        subsumed = true;
+                        break;
+                    } else {
+                        j--;
+                    }
+                    // want to delete the small one, adjust i accordingly
+                    console.log(smallArrayIndex, largeArrayIndex);
+                }
+                // let includes = smallArray.every(inLargeArray, largeArray);
+                // if(includes) {
+                //     console.log(smallArrayIndex, largeArrayIndex);
+                // }
+            }
+            if(!subsumed) {
+                i++;
+            }
+        }
+
         return groupDataArray;
     }
 
