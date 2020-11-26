@@ -33,32 +33,67 @@ class Data extends React.Component {
             }
             return d;
         });
-        console.log(data);
-        // TODO: create a method that nests recursively on some stopping condition
-        // Further Nesting is possible by recursing on these methods 
+        
+        // Further Nesting is possible by recursing on these methods
+        let newThing = this.parseDataHelper(data, []);
+        return newThing;
+    }
 
+    parseDataHelper(data, ancestralTags) {
         // Use d3's methods to manipulate data... 
         // Expand: one row per tag per organization with a new 'key' field
+        // but! if it corresponds to the parentKey, we don't want to expand it anymore, but give it the "" key
         const keyedData = [];
         for (let i = 0; i < data.length; i++) {
             const elem = data[i];
+            let seenTags = []
             for(let j = 0; j < data[i].tags.length; j++) {
+                // if a tag has already been generated, don't do it again
+                if(!seenTags.includes(data[i].tags[j])) {
+                    // if the tag is the parent's key, we don't want to generate it unless 
+                    // it doesn't have any other tags
+                    if(!ancestralTags.includes(data[i].tags[j])) {
+                        const clonedElem = cloneDeep(elem);
+                        clonedElem.key = data[i].tags[j];
+                        keyedData.push(clonedElem);
+                        seenTags.push(data[i].tags[j]);
+                    }
+                }
+            }
+            // if this didn't have any tags other than the parent, then generate it once
+            if(seenTags.length == 0) {
                 const clonedElem = cloneDeep(elem);
-                clonedElem.key = data[i].tags[j];
+                clonedElem.key = "";
                 keyedData.push(clonedElem);
             }
         }
-        console.log(keyedData);
 
         // Collapse: d3.group, then flatten into an array
         const groupedData = d3.group(keyedData, (d) => d.key);
         const groupDataArray = Array.from(groupedData, ([key, value]) => ({ key, value }));
-        console.log(groupedData);
-        console.log(groupDataArray);
+        // console.log(groupedData);
+        // console.log(groupDataArray);
 
-        // TODO: Check for supersets
+        let recursiveThreshold = 5;
+        let unNestThreshold = 1;
+        if(groupDataArray.length > recursiveThreshold) {
+            this.mergeSupersets(groupDataArray);
+            for(let i = 0; i < groupDataArray.length; i++) {
+                if(groupDataArray[i].key !== "") {
+                    let newTags = ancestralTags.concat([groupDataArray[i].key])
+                    groupDataArray[i].value = this.parseDataHelper(groupDataArray[i].value, newTags);
+                }
+                // this is the group with no other tags besides the parent
+            }
+        } 
+        return groupDataArray;
+    }
+
+    mergeSupersets(groupDataArray) {
+        // Check for supersets
         let i = 0; 
         while(i < groupDataArray.length - 1) {
+            // indicates whether groupDataArray[i] has been deleted because it is contained within another group
             let subsumed = false;
             for(let j = i + 1; j < groupDataArray.length; j++) {
                 let smallArrayIndex, largeArrayIndex;
@@ -71,20 +106,30 @@ class Data extends React.Component {
                 }
                 let smallArray = groupDataArray[smallArrayIndex].value;
                 let largeArray = groupDataArray[largeArrayIndex].value;
+                // indicates that of the two arrays, i and j, one is the superset of the other
                 let smallInLarge = true;
                 for(let smallIterator = 0; smallIterator < smallArray.length; smallIterator++) {
                     let smallElementInLarge = false;
+                    // for each element in the small array, iterate through the large array
+                    // if the element is found, break and set smallElementInLarge to true
                     for(let largeIterator = 0; largeIterator < largeArray.length; largeIterator++) {
                         if(smallArray[smallIterator].name === largeArray[largeIterator].name) {
                             smallElementInLarge = true;
                             break;
                         }
                     }
+                    // smallInLarge takes the result of each individual element and &'s them together
+                    // if any one element is not found, break
                     smallInLarge = smallElementInLarge;
                     if(!smallInLarge) {
                         break;
                     }
                 }
+                // if the smaller array is a subset of the larger array
+                // remove the smaller array; if the smaller array is i (smaller index) 
+                // delete it and continue to the next iteration of the while loop
+                // if the smaller is array is j (larger index), delete it
+                // continue to next iteration of the for loop, adjusting j
                 if(smallInLarge) {
                     groupDataArray.splice(smallArrayIndex, 1);
                     if(smallArrayIndex < largeArrayIndex) {
@@ -93,20 +138,16 @@ class Data extends React.Component {
                     } else {
                         j--;
                     }
-                    // want to delete the small one, adjust i accordingly
                     console.log(smallArrayIndex, largeArrayIndex);
                 }
-                // let includes = smallArray.every(inLargeArray, largeArray);
-                // if(includes) {
-                //     console.log(smallArrayIndex, largeArrayIndex);
-                // }
             }
+            // if array i was not deleted this time around, increment i
             if(!subsumed) {
                 i++;
             }
         }
-
-        return groupDataArray;
+        // directly modifies the array given to it
+        return;
     }
 
     /**
