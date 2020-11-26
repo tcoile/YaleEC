@@ -15,7 +15,9 @@ class Data extends React.Component {
 
     async getData() {
         console.log("getting response");
-        let response = await fetch('/get_organizations').catch(() => console.log("could not fetch organizations"));
+        let response = await fetch('/get_organizations', {
+            mode: 'cors'
+        }).catch(() => console.log("could not fetch organizations"));
         let jsonRes = await response.json().catch(() => console.log("not a valid json thing"));
         return jsonRes;
     }
@@ -155,7 +157,7 @@ class Data extends React.Component {
         ]}
 
         let nodeCount = 0;
-        // TODO: these functions
+
         function nodesAndEdges(tree, nodeList, edgeList, parentID) {
             // if leaf, append self to nodelist
             if ('name' in tree) {
@@ -167,11 +169,10 @@ class Data extends React.Component {
                 const node = {...tree, id: nodeCount};
                 nodeCount++;
                 nodeList.push(node);
-                if(parentID != undefined) {
+                if(parentID !== undefined) {
                     edgeList.push({source: parentID, target: node.id});
                 }
                 tree.value.forEach((child) => {
-                    console.log(child)
                     nodesAndEdges(child, nodeList, edgeList, node.id);
                 })
             }
@@ -180,8 +181,6 @@ class Data extends React.Component {
         let nodeList = [];
         let edgeList = [];
         nodesAndEdges(fakeData, nodeList, edgeList, undefined);
-        console.log(nodeList);
-        console.log(edgeList);
 
         // create constrained force layout with nodes and edges
         // set up workspace
@@ -206,7 +205,7 @@ class Data extends React.Component {
             .force('charge', d3.forceManyBody()
               .strength(-70))
             .force('link', d3.forceLink(edgeList)
-              .distance(150))
+              .distance(100))
             .force('center', d3.forceCenter().x(width / 2).y(height / 2));
         
         const edges = forcePlot.selectAll('line')

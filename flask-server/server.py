@@ -23,9 +23,9 @@ logging.basicConfig(level=logging.DEBUG)
 cred = credentials.Certificate('key.json')
 initialize_app(cred)
 db = firestore.client()
-
-cas = CAS(app)
 CORS(app)
+cas = CAS(app)
+
 
 
 # set JSON encoder to handle dates the way we want
@@ -76,9 +76,12 @@ def load_react(filename = "index.html"):
     app.logger.info(filename)
     full_url = f'http://localhost:3000/' + filename
     app.logger.info(full_url)
-    resp = requests.get(full_url)
-    excluded_headers = ['content-encoding', 'content-length', 'transfer-encoding', 'connection']
-    headers = [(name, value) for (name, value) in     resp.raw.headers.items() if name.lower() not in excluded_headers]
-    return Response(resp.content, resp.status_code, headers)
+    return requests.get(full_url).content
+    # resp = Response()
+    # response = requests.get(full_url)
+    # resp.content = response.content
+    # resp.status_code = response.status_code
+    # resp.headers['Access-Control-Allow-Origin'] = '*'
+    # return Response(resp.content, resp.status_code, resp.headers)
 
 app.run(debug=True)
