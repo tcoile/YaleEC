@@ -1,6 +1,7 @@
 import React from "react";
 import * as d3 from "d3";
 import cloneDeep from "lodash/cloneDeep";
+import '../App.css';
 // import Chip from '@material-ui/core/Chip';
 
 class Data extends React.Component {
@@ -111,7 +112,6 @@ class Data extends React.Component {
             }
         }
 
-        console.log("before recurse", onlyParentTag, groupDataArray.length);
         if(groupDataArray.length > recursiveThreshold) {
             for(let i = 0; i < groupDataArray.length; i++) {
                 if(groupDataArray[i].name !== ancestralTags[ancestralTags.length - 1]) {
@@ -156,6 +156,12 @@ class Data extends React.Component {
             return true;
         }
         return false;
+    }
+
+    changeChildKeys(array, key) {
+        for(let i = 0; i < array.length; i++) {
+            array[i].key = key;
+        }
     }
 
     mergeSupersets(groupDataArray, topLevel, map) {
@@ -211,15 +217,18 @@ class Data extends React.Component {
                             if(superset) {
                                 // if superset and same size, choose more specific tag
                                 groupDataArray[largeArrayIndex].name = child;
+                                this.changeChildKeys(largeArray, child);
                             } else {
                                 // combine their names
                                 groupDataArray[largeArrayIndex].name = parent + "/" + child;
+                                this.changeChildKeys(largeArray, parent + "/" + child);
                             }
                         } else {
                             if(!superset) {
                                 // if the ratio is greater than 1/3, combine their names
                                 if(1/(smallArray.length / largeArray.length) < 3) {
                                     groupDataArray[largeArrayIndex].name = parent + "/" + child;
+                                    this.changeChildKeys(largeArray, parent + "/" + child);
                                 }
                             }
                         }
@@ -274,13 +283,13 @@ class Data extends React.Component {
         let nodes = root.descendants();
 
         const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(10).strength(1))
-            .force("charge", d3.forceManyBody().strength(-50))
+            .force("link", d3.forceLink(links).id(d => d.id).distance(30).strength(0.5))
+            .force("charge", d3.forceManyBody().strength(-120))
             .force("x", d3.forceX())
             .force("y", d3.forceY())
 
         const width = 1000;
-        const height = 1000;
+        const height = 490;
 
         const color = d3.scaleOrdinal()
             .domain(data, (d) => d.name) 
@@ -303,8 +312,7 @@ class Data extends React.Component {
         const forcePlot = d3.select(this._rootNode)
             .append('svg')
             .attr('viewBox', [-width/2, -height/2, width, height])
-            // .attr("preserveAspectRatio", "xMidYMid meet") 
-            // .call(zoom);
+            .attr("preserveAspectRatio", "xMidYMid meet")
         
         let link = forcePlot.append('g')
                 .attr('stroke', '#999')
@@ -367,7 +375,8 @@ class Data extends React.Component {
                 .join('circle')
                     .attr('fill', (d) => d.children || d._children ? null : color(d.data.key))
                     .attr('stroke', (d) => d.children || d._children ? color(d.data.name) : '#fff')
-                    .attr('r', 3.5)
+                    .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
+                    .attr('r',  (d) => d.children || d._children ? 7 : 6)
                     .on("click", click)
                     .call(drag(simulation));
             
@@ -388,7 +397,8 @@ class Data extends React.Component {
             .join('circle')
                 .attr('fill', (d) => d.children || d._children ? null : color(d.data.key))
                 .attr('stroke', d => d.children || d._children ? color(d.data.name) : '#fff')
-                .attr('r', 3.5)
+                .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
+                .attr('r', (d) => d.children || d._children ? 7 : 6)
                 .on("click", click)
                 .call(drag(simulation))
 
@@ -403,6 +413,7 @@ class Data extends React.Component {
                 .attr('y2', d => d.target.y);
             node.attr('cx', d => d.x)
                 .attr('cy', d => d.y)
+            forcePlot.attr('viewBox', [-window.innerWidth/2, -window.innerHeight/2, window.innerWidth, window.innerHeight])
         })
     }
 
