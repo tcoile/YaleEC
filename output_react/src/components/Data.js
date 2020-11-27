@@ -242,14 +242,18 @@ class Data extends React.Component {
         const dat = {name: 'Yale ECs', children: data}
         // const dat = data[27];
 
-        const root = d3.hierarchy(data[10]);
-        console.log(root);
+        const root = d3.hierarchy(data[0]);
+
         // Returns a list of all nodes under the root.
         function flatten(root) {
             var nodes = [], i = 0;
         
             function recurse(node) {
-                if (node.children) node.children.forEach(recurse);
+                if (node.children) {
+                    node.children.forEach(recurse);
+                    node._children = node.children;
+                    node.children = null;
+                }
                 if (!node.identity) node.identity = ++i;
                 nodes.push(node);
             }
@@ -259,10 +263,13 @@ class Data extends React.Component {
         }
 
         let links = root.links();
-        let nodes = flatten(root);
+        flatten(root)
+        let nodes = root.descendants();
+        console.log(nodes);
+        console.log(links);
 
         const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(1))
+            .force("link", d3.forceLink(links).id(d => d.id).distance(10).strength(1))
             .force("charge", d3.forceManyBody().strength(-50))
             .force("x", d3.forceX())
             .force("y", d3.forceY())
@@ -278,7 +285,7 @@ class Data extends React.Component {
                 .attr('stroke', '#999')
                 .attr('stroke-opacity', 0.6)
             .selectAll('line')
-            .data(links)
+            .data(links, (d) => [d.source, d.target])
             .join('line');
         
         // add interactivity
@@ -322,33 +329,29 @@ class Data extends React.Component {
             update();
         }
 
+        /**
+         * This function looks deceptively simple, but took me 4 hours to create. 
+         * I still do not know why I can't do enter() and exit() sequences as opposed to join - 
+         * perhaps because of the way tick works? 
+         */
         function update() {
             nodes = root.descendants();
             links = root.links();
             console.log(nodes);
-            
-            // Make a shallow copy to protect against mutation, while
-            // recycling old nodes to preserve position and velocity.
-            const old = new Map(node.data().map(d => [d.identity, d]));
-            nodes = nodes.map(d => Object.assign(old.get(d.identity) || {}, d));
-            links = links.map(d => Object.assign({}, d));
 
             link = link.data(links, d => [d.source, d.target])
                 .join('line');
-            node = node.data(nodes, d => d.identity);
 
-            node.exit().remove();
-
-            node.enter()
-                .append('circle')
-                .attr('fill', (d) => {
-                    console.log('entering' + d.identity);
-                    return 'blue'
-                })
-                .attr('stroke', d => d.children || d._children ? null : '#fff')
-                .attr('r', 3.5)
-                .on("click", click)
-                .call(drag(simulation));
+            node = node.data(nodes, d => d.identity)
+                .join('circle')
+                    .attr('fill', (d) => d.children || d._children ? null : '#000')
+                    .attr('stroke', (d) => d.children || d._children ? null : '#fff')
+                    .attr('r', 3.5)
+                    .on("click", click)
+                    .call(drag(simulation));
+            
+            node.append("title")
+                .text(d => d.data.name);
             
             simulation.nodes(nodes);
             simulation.force("link").links(links);
