@@ -78,7 +78,6 @@ class Data extends React.Component {
         // console.log(groupDataArray);
 
         let recursiveThreshold = 5;
-        let unNestThreshold = 1;
         this.mergeSupersets(groupDataArray, topLevel, supersetMap);
         // and now we want to cull it so that groups that only have one member are connected directly to the parent again
         // first find the group that only has that tag
@@ -94,7 +93,7 @@ class Data extends React.Component {
             }
         }
         for(let i = 0; i < groupDataArray.length; i++) {
-            if(groupDataArray[i].children.length === 1) {
+            if(groupDataArray[i].children.length === 1 && i !== onlyParentTag) {
                 // change key to parent key
                 groupDataArray[i].children[0].key = parentTag;
                 // put it into the only tag group
@@ -108,8 +107,11 @@ class Data extends React.Component {
                 if(i < onlyParentTag) {
                     onlyParentTag--;
                 }
+                i--;
             }
         }
+
+        console.log("before recurse", onlyParentTag, groupDataArray.length);
         if(groupDataArray.length > recursiveThreshold) {
             for(let i = 0; i < groupDataArray.length; i++) {
                 if(groupDataArray[i].name !== ancestralTags[ancestralTags.length - 1]) {
@@ -119,6 +121,16 @@ class Data extends React.Component {
                 }
             }
         } 
+        
+        // and then we want to pull all the ones in the parent tag group to the parent tag itself
+        if(onlyParentTag !== -1) {
+            let onlyParentArray = groupDataArray[onlyParentTag].children;
+            groupDataArray.splice(onlyParentTag, 1);
+            // then put all of its children into the parent children
+            for(let i = 0; i < onlyParentArray.length; i++) {
+                groupDataArray.push(onlyParentArray[i]);
+            }
+        }
 
         return groupDataArray;
     }
@@ -237,11 +249,6 @@ class Data extends React.Component {
      * 
      */
     buildVisualization(data) {
-        console.log(data);
-        // transform data into a list of nodes and directed edges (from parent to child)
-        const dat = {name: 'Yale ECs', children: data}
-        // const dat = data[27];
-
         const root = d3.hierarchy(data[0]);
 
         // Returns a list of all nodes under the root.
@@ -262,11 +269,9 @@ class Data extends React.Component {
             return nodes;
         }
 
-        let links = root.links();
         flatten(root)
+        let links = root.links();
         let nodes = root.descendants();
-        console.log(nodes);
-        console.log(links);
 
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.id).distance(10).strength(1))
@@ -277,9 +282,29 @@ class Data extends React.Component {
         const width = 1000;
         const height = 1000;
 
+        const color = d3.scaleOrdinal()
+            .domain(data, (d) => d.name) 
+            .range(d3.schemeTableau10);
+
+        // Enable zooming, panning
+        // function zoomed(event) {
+        //     console.log(event);
+        //     var translateX = event.transform.x;
+        //     var translateY = event.transform.y;
+        //     var xScale = event.transform.k;
+        //     forcePlot.attr("transform", "translate(" + translateX + "," + translateY + ")scale(" + xScale + ")");
+        // }
+
+        // const zoom = d3.zoom()
+        //     // .scale(1.0)
+        //     // .scaleExtent([1, 5])
+        //     .on('zoom', zoomed);
+
         const forcePlot = d3.select(this._rootNode)
             .append('svg')
             .attr('viewBox', [-width/2, -height/2, width, height])
+            // .attr("preserveAspectRatio", "xMidYMid meet") 
+            // .call(zoom);
         
         let link = forcePlot.append('g')
                 .attr('stroke', '#999')
@@ -316,7 +341,6 @@ class Data extends React.Component {
         // Add click interactivity
         function click(event, d) {
             if (event.defaultPrevented) return; // ignore drag
-            console.log(d);
             if (d.children) {
               d._children = d.children;
               d.children = null;
@@ -324,8 +348,6 @@ class Data extends React.Component {
               d.children = d._children;
               d._children = null;
             }
-            console.log(d);
-            console.log(root.descendants());
             update();
         }
 
@@ -337,15 +359,14 @@ class Data extends React.Component {
         function update() {
             nodes = root.descendants();
             links = root.links();
-            console.log(nodes);
 
             link = link.data(links, d => [d.source, d.target])
                 .join('line');
 
             node = node.data(nodes, d => d.identity)
                 .join('circle')
-                    .attr('fill', (d) => d.children || d._children ? null : '#000')
-                    .attr('stroke', (d) => d.children || d._children ? null : '#fff')
+                    .attr('fill', (d) => d.children || d._children ? null : color(d.data.key))
+                    .attr('stroke', (d) => d.children || d._children ? color(d.data.name) : '#fff')
                     .attr('r', 3.5)
                     .on("click", click)
                     .call(drag(simulation));
@@ -365,8 +386,8 @@ class Data extends React.Component {
             .selectAll('circle')
             .data(nodes, d => d.identity)
             .join('circle')
-                .attr('fill', (d) => d.children || d._children ? null : '#000')
-                .attr('stroke', d => d.children || d._children ? null : '#fff')
+                .attr('fill', (d) => d.children || d._children ? null : color(d.data.key))
+                .attr('stroke', d => d.children || d._children ? color(d.data.name) : '#fff')
                 .attr('r', 3.5)
                 .on("click", click)
                 .call(drag(simulation))
