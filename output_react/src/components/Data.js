@@ -257,7 +257,6 @@ class Data extends React.Component {
      * We're building this visualization in the MOST d3 way, 
      * the LEAST React way possible
      * 
-     * For now, following a scheme like this: https://bl.ocks.org/ctufts/f38ef0187f98c537d791d24fda4a6ef9 
      */
     buildVisualization(data) {
         console.log(data);
@@ -265,12 +264,34 @@ class Data extends React.Component {
         const dat = {name: 'Yale ECs', children: data}
         // const dat = data[27];
 
-        const root = d3.hierarchy(data[10]);
-        const links = root.links();
-        const nodes = root.descendants();
+        const root = d3.hierarchy(data[0]);
+
+        // Returns a list of all nodes under the root.
+        function flatten(root) {
+            var nodes = [], i = 0;
+        
+            function recurse(node) {
+                if (node.children) {
+                    node.children.forEach(recurse);
+                    node._children = node.children;
+                    node.children = null;
+                }
+                if (!node.identity) node.identity = ++i;
+                nodes.push(node);
+            }
+        
+            recurse(root);
+            return nodes;
+        }
+
+        flatten(root)
+        let links = root.links();
+        let nodes = root.descendants();
+        console.log(nodes);
+        console.log(links);
 
         const simulation = d3.forceSimulation(nodes)
-            .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(1))
+            .force("link", d3.forceLink(links).id(d => d.id).distance(10).strength(1))
             .force("charge", d3.forceManyBody().strength(-50))
             .force("x", d3.forceX())
             .force("y", d3.forceY())
@@ -286,11 +307,11 @@ class Data extends React.Component {
             // Class to make it responsive.
             // .classed("svg-content-responsive", true)
         
-        const link = forcePlot.append('g')
+        let link = forcePlot.append('g')
                 .attr('stroke', '#999')
                 .attr('stroke-opacity', 0.6)
             .selectAll('line')
-            .data(links)
+            .data(links, (d) => [d.source, d.target])
             .join('line');
         
         // add interactivity
@@ -318,16 +339,62 @@ class Data extends React.Component {
                 .on("end", dragended);
         }
 
-        const node = forcePlot.append('g')
+        // Add click interactivity
+        function click(event, d) {
+            if (event.defaultPrevented) return; // ignore drag
+            console.log(d);
+            if (d.children) {
+              d._children = d.children;
+              d.children = null;
+            } else {
+              d.children = d._children;
+              d._children = null;
+            }
+            console.log(d);
+            console.log(root.descendants());
+            update();
+        }
+
+        /**
+         * This function looks deceptively simple, but took me 4 hours to create. 
+         * I still do not know why I can't do enter() and exit() sequences as opposed to join - 
+         * perhaps because of the way tick works? 
+         */
+        function update() {
+            nodes = root.descendants();
+            links = root.links();
+            console.log(nodes);
+
+            link = link.data(links, d => [d.source, d.target])
+                .join('line');
+
+            node = node.data(nodes, d => d.identity)
+                .join('circle')
+                    .attr('fill', (d) => d.children || d._children ? null : '#000')
+                    .attr('stroke', (d) => d.children || d._children ? null : '#fff')
+                    .attr('r', 3.5)
+                    .on("click", click)
+                    .call(drag(simulation));
+            
+            node.append("title")
+                .text(d => d.data.name);
+            
+            simulation.nodes(nodes);
+            simulation.force("link").links(links);
+            simulation.restart();
+        } 
+
+        let node = forcePlot.append('g')
                 .attr('fill', '#fff')
                 .attr('stroke', '#000')
                 .attr('stroke-width', 1.5)
             .selectAll('circle')
-            .data(nodes)
+            .data(nodes, d => d.identity)
             .join('circle')
-                .attr('fill', (d) => d.children ? null : '#000')
-                .attr('stroke', d => d.children ? null : '#fff')
+                .attr('fill', (d) => d.children || d._children ? null : '#000')
+                .attr('stroke', d => d.children || d._children ? null : '#fff')
                 .attr('r', 3.5)
+                .on("click", click)
                 .call(drag(simulation))
 
         node.append("title")
