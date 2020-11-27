@@ -1,6 +1,7 @@
 import React from "react";
 import * as d3 from "d3";
 import cloneDeep from "lodash/cloneDeep";
+import '../App.css';
 // import Chip from '@material-ui/core/Chip';
 
 class Data extends React.Component {
@@ -112,7 +113,6 @@ class Data extends React.Component {
             }
         }
 
-        console.log("before recurse", onlyParentTag, groupDataArray.length);
         if(groupDataArray.length > recursiveThreshold) {
             for(let i = 0; i < groupDataArray.length; i++) {
                 if(groupDataArray[i].name !== ancestralTags[ancestralTags.length - 1]) {
@@ -157,6 +157,12 @@ class Data extends React.Component {
             return true;
         }
         return false;
+    }
+
+    changeChildKeys(array, key) {
+        for(let i = 0; i < array.length; i++) {
+            array[i].key = key;
+        }
     }
 
     mergeSupersets(groupDataArray, topLevel, map) {
@@ -212,15 +218,18 @@ class Data extends React.Component {
                             if(superset) {
                                 // if superset and same size, choose more specific tag
                                 groupDataArray[largeArrayIndex].name = child;
+                                this.changeChildKeys(largeArray, child);
                             } else {
                                 // combine their names
                                 groupDataArray[largeArrayIndex].name = parent + "/" + child;
+                                this.changeChildKeys(largeArray, parent + "/" + child);
                             }
                         } else {
                             if(!superset) {
                                 // if the ratio is greater than 1/3, combine their names
                                 if(1/(smallArray.length / largeArray.length) < 3) {
                                     groupDataArray[largeArrayIndex].name = parent + "/" + child;
+                                    this.changeChildKeys(largeArray, parent + "/" + child);
                                 }
                             }
                         }
@@ -267,11 +276,15 @@ class Data extends React.Component {
             .force("y", d3.forceY())
 
         const width = 1000;
-        const height = 1000;
+        const height = 490;
 
         const forcePlot = d3.select(this._rootNode)
             .append('svg')
             .attr('viewBox', [-width/2, -height/2, width, height])
+            .attr("preserveAspectRatio", "xMidYMid meet")
+            // .attr("viewBox", [-width/2, -height/2, width, height])
+            // Class to make it responsive.
+            // .classed("svg-content-responsive", true)
         
         const link = forcePlot.append('g')
                 .attr('stroke', '#999')
@@ -328,6 +341,7 @@ class Data extends React.Component {
                 .attr('y2', d => d.target.y);
             node.attr('cx', d => d.x)
                 .attr('cy', d => d.y)
+            forcePlot.attr('viewBox', [-window.innerWidth/2, -window.innerHeight/2, window.innerWidth, window.innerHeight])
         })
     }
 

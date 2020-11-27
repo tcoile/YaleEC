@@ -24,10 +24,10 @@ import {
 const theme = createMuiTheme({
   palette: {
     primary: {
-      main: purple[500],
+      main: '#fff',
     },
     secondary: {
-      main: green[500],
+      main: '#4f79a7',
     },
   },
 })
@@ -60,16 +60,15 @@ export default function App() {
                 <Typography variant="h6" className={classes.title}>
                   Yale Extracurricular Search
                 </Typography>
-                <Button style={{color: "white"}} component={Link} to="/">Home</Button>
-                <Button style={{color: "white"}} component={Link} to="/data">Organizations</Button>
-                <Login />
+                <Button style={{color: '#4f79a7'}} component={Link} to="/">Home</Button>
+                <Button style={{color: '#4f79a7'}} component={Link} to="/data">Organizations</Button>
               </Toolbar>
             </AppBar>
           </div>
-          <Paper style={{marginTop: "65px"}} m={2}>
+          <Paper style={{marginTop: "9vh"}} m={2}>
             <Switch>
               <Route path="/data">
-                <Data />
+                <div class="svg-container"><Data /></div> 
               </Route>
               <Route path="/">
                 <Home />
