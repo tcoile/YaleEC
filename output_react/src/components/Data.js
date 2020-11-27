@@ -70,7 +70,7 @@ class Data extends React.Component {
 
         // Collapse: d3.group, then flatten into an array
         const groupedData = d3.group(keyedData, (d) => d.key);
-        const groupDataArray = Array.from(groupedData, ([key, value]) => ({ key, value }));
+        const groupDataArray = Array.from(groupedData, ([key, value]) => ({ name: key, children: value }));
         // console.log(groupedData);
         // console.log(groupDataArray);
 
@@ -79,9 +79,9 @@ class Data extends React.Component {
         if(groupDataArray.length > recursiveThreshold) {
             this.mergeSupersets(groupDataArray);
             for(let i = 0; i < groupDataArray.length; i++) {
-                if(groupDataArray[i].key !== "") {
-                    let newTags = ancestralTags.concat([groupDataArray[i].key])
-                    groupDataArray[i].value = this.parseDataHelper(groupDataArray[i].value, newTags);
+                if(groupDataArray[i].name !== "") {
+                    let newTags = ancestralTags.concat([groupDataArray[i].name])
+                    groupDataArray[i].children = this.parseDataHelper(groupDataArray[i].children, newTags);
                 }
                 // this is the group with no other tags besides the parent
             }
@@ -97,15 +97,15 @@ class Data extends React.Component {
             let subsumed = false;
             for(let j = i + 1; j < groupDataArray.length; j++) {
                 let smallArrayIndex, largeArrayIndex;
-                if(groupDataArray[i].value.length <= groupDataArray[j].value.length) {
+                if(groupDataArray[i].children.length <= groupDataArray[j].children.length) {
                     smallArrayIndex = i;
                     largeArrayIndex = j;
                 } else {
                     smallArrayIndex = j;
                     largeArrayIndex = i;
                 }
-                let smallArray = groupDataArray[smallArrayIndex].value;
-                let largeArray = groupDataArray[largeArrayIndex].value;
+                let smallArray = groupDataArray[smallArrayIndex].children;
+                let largeArray = groupDataArray[largeArrayIndex].children;
                 // indicates that of the two arrays, i and j, one is the superset of the other
                 let smallInLarge = true;
                 for(let smallIterator = 0; smallIterator < smallArray.length; smallIterator++) {
@@ -138,7 +138,6 @@ class Data extends React.Component {
                     } else {
                         j--;
                     }
-                    console.log(smallArrayIndex, largeArrayIndex);
                 }
             }
             // if array i was not deleted this time around, increment i
@@ -157,132 +156,84 @@ class Data extends React.Component {
      * For now, following a scheme like this: https://bl.ocks.org/ctufts/f38ef0187f98c537d791d24fda4a6ef9 
      */
     buildVisualization(data) {
+        console.log(data);
         // transform data into a list of nodes and directed edges (from parent to child)
-        const fakeData = {
-            key: 'everything',
-            value: [
-            {
-                key: 'topic1',
-                value: [
-                    {name: 'club1top1', key: 'topic1'},
-                    {
-                        key: 'subtopic2',
-                        value: [
-                            {name: 'club2top1subtop2', key: 'subtopic2'},
-                            {name: 'club5top1subtop2', key: 'subtopic2'},
-                            {name: 'club6top1subtop2', key: 'subtopic2'},
-                            {name: 'club7top1subtop2', key: 'subtopic2'}
-                        ]
-                    },
-                    {name: 'club3top1', key: 'topic1'},
-                    {name: 'club4top1', key: 'topic1'},
-                ] 
-            },
-            {
-                key: 'topic2',
-                value: [
-                    {name: 'club1top2'},
-                    {
-                        key: 'subtopic2',
-                        value: [
-                            {name: 'club2top2subtop2'},
-                            {name: 'club5top2subtop2'},
-                            {name: 'club6top2subtop2'},
-                            {name: 'club7top2subtop2'}
-                        ]
-                    },
-                    {name: 'club3top2'},
-                    {name: 'club4top2'},
-                ] 
-            }
-        ]}
+        const dat = {name: 'Yale ECs', children: data}
+        // const dat = data[27];
 
-        let nodeCount = 0;
+        const root = d3.hierarchy(data[10]);
+        const links = root.links();
+        const nodes = root.descendants();
 
-        function nodesAndEdges(tree, nodeList, edgeList, parentID) {
-            // if leaf, append self to nodelist
-            if ('name' in tree) {
-                const leaf = {...tree, id: nodeCount};
-                nodeCount++;
-                nodeList.push(leaf);
-                edgeList.push({source: parentID, target: leaf.id});
-            } else { // append self to nodelist, call getNodes on each child
-                const node = {...tree, id: nodeCount};
-                nodeCount++;
-                nodeList.push(node);
-                if(parentID !== undefined) {
-                    edgeList.push({source: parentID, target: node.id});
-                }
-                tree.value.forEach((child) => {
-                    nodesAndEdges(child, nodeList, edgeList, node.id);
-                })
-            }
-        }
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(1))
+            .force("charge", d3.forceManyBody().strength(-50))
+            .force("x", d3.forceX())
+            .force("y", d3.forceY())
 
-        let nodeList = [];
-        let edgeList = [];
-        nodesAndEdges(fakeData, nodeList, edgeList, undefined);
-
-        // create constrained force layout with nodes and edges
-        // set up workspace
-        const margin = {
-            top: 60,
-            bottom: 60,
-            right: 60,
-            left: 60,
-        };
-        
-        const height = 700 - margin.top - margin.bottom;
-        const width = 700 - margin.top - margin.bottom;
+        const width = 1000;
+        const height = 1000;
 
         const forcePlot = d3.select(this._rootNode)
             .append('svg')
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom)
-            .append('g')
-            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+            .attr('viewBox', [-width/2, -height/2, width, height])
         
-        const force = d3.forceSimulation(nodeList)
-            .force('charge', d3.forceManyBody()
-              .strength(-70))
-            .force('link', d3.forceLink(edgeList)
-              .distance(100))
-            .force('center', d3.forceCenter().x(width / 2).y(height / 2));
+        const link = forcePlot.append('g')
+                .attr('stroke', '#999')
+                .attr('stroke-opacity', 0.6)
+            .selectAll('line')
+            .data(links)
+            .join('line');
         
-        const edges = forcePlot.selectAll('line')
-            .data(edgeList)
-            .enter()
-            .append('line')
-            .style('stroke', 'black')
-            .attr('stroke-opacity', 0.1)
-            .style('stroke-width', 1);
-      
-        const nodes = forcePlot.selectAll('circle')
-            .data(nodeList)
-            .enter()
-            .append('circle')
-            .attr('r', 6)
-            .attr('fill', 'blue');
+        // add interactivity
+        const drag = simulation => {
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
 
-        const labels = forcePlot.selectAll('text')
-            .data(nodeList)
-            .enter()
-            .append('text')
-            .attr('font-family', 'sans-serif')
-            .attr('font-size', 'small')
-            .text((d) => d.name)
-            .style('pointer-events', 'none');
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+              
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+              
+            return d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended);
+        }
 
-        force.on('tick', () => {
-            edges.attr('x1', (d) => d.source.x)
-                .attr('y1', (d) => d.source.y)
-                .attr('y2', (d) => d.target.y)
-                .attr('x2', (d) => d.target.x);
-            nodes.attr('cx', (d) => d.x)
-                .attr('cy', (d) => d.y);
-            labels.attr('x', (d) => d.x + 4)
-                .attr('y', (d) => d.y - 4);
-        });
+        const node = forcePlot.append('g')
+                .attr('fill', '#fff')
+                .attr('stroke', '#000')
+                .attr('stroke-width', 1.5)
+            .selectAll('circle')
+            .data(nodes)
+            .join('circle')
+                .attr('fill', (d) => d.children ? null : '#000')
+                .attr('stroke', d => d.children ? null : '#fff')
+                .attr('r', 3.5)
+                .call(drag(simulation))
+
+        node.append("title")
+            .text(d => d.data.name);
+
+        // update on tick
+        simulation.on('tick', () => {
+            link.attr('x1', d => d.source.x)
+                .attr('y1', d => d.source.y)
+                .attr('x2', d => d.target.x)
+                .attr('y2', d => d.target.y);
+            node.attr('cx', d => d.x)
+                .attr('cy', d => d.y)
+        })
     }
 
     shouldComponentUpdate() {
