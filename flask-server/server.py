@@ -7,6 +7,7 @@ from flask_cors import CORS, cross_origin
 import requests
 import datetime as dt
 import logging
+import json
 
 # Authentication
 from flask_cas import CAS, login_required
@@ -63,11 +64,18 @@ app.json_encoder = FlaskDateTimeEncoder
 @app.route('/get_organizations')
 @login_required
 def get_organizations():
-    documents = db.collection(u'organizations').stream()
-    tester = []
-    for doc in documents:
-        tester.append(doc.to_dict())
-    return jsonify(tester)
+    with open('firestoredata.py') as f:
+        data = json.load(f)
+    f.close()
+
+    app.logger.info(type(data))
+    app.logger.info(type(jsonify(data)))
+    return jsonify(data)
+    # documents = db.collection(u'organizations').stream()
+    # tester = []
+    # for doc in documents:
+    #     tester.append(doc.to_dict())
+    # return jsonify(tester)
 
 @app.route('/')
 @app.route('/<path:filename>')

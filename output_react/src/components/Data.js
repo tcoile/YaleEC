@@ -18,6 +18,7 @@ class Data extends React.Component {
         let response = await fetch('/get_organizations', {
             mode: 'cors'
         }).catch(() => console.log("could not fetch organizations"));
+        console.log(response);
         let jsonRes = await response.json().catch(() => console.log("not a valid json thing"));
         return jsonRes;
     }
@@ -34,12 +35,14 @@ class Data extends React.Component {
             return d;
         });
         
+        let map = {};
         // Further Nesting is possible by recursing on these methods
-        let newThing = this.parseDataHelper(data, []);
+        let newThing = this.parseDataHelper(data, [], true, map);
+        console.log(map);
         return newThing;
     }
 
-    parseDataHelper(data, ancestralTags) {
+    parseDataHelper(data, ancestralTags, topLevel, supersetMap) {
         // Use d3's methods to manipulate data... 
         // Expand: one row per tag per organization with a new 'key' field
         // but! if it corresponds to the parentKey, we don't want to expand it anymore, but give it the "" key
@@ -60,10 +63,10 @@ class Data extends React.Component {
                     }
                 }
             }
-            // if this didn't have any tags other than the parent, then generate it once
-            if(seenTags.length == 0) {
+            // if this didn't have any tags other than the parent, then generate it once with the parent tag
+            if(seenTags.length === 0) {
                 const clonedElem = cloneDeep(elem);
-                clonedElem.key = "";
+                clonedElem.key = ancestralTags[ancestralTags.length - 1];
                 keyedData.push(clonedElem);
             }
         }
@@ -76,20 +79,74 @@ class Data extends React.Component {
 
         let recursiveThreshold = 5;
         let unNestThreshold = 1;
-        if(groupDataArray.length > recursiveThreshold) {
-            this.mergeSupersets(groupDataArray);
+        this.mergeSupersets(groupDataArray, topLevel, supersetMap);
+        // and now we want to cull it so that groups that only have one member are connected directly to the parent again
+        // first find the group that only has that tag
+        let parentTag = ancestralTags[ancestralTags.length - 1];
+        let onlyParentTag = 0;
+        if(groupDataArray[onlyParentTag].name !== parentTag) {
+            onlyParentTag = -1;
             for(let i = 0; i < groupDataArray.length; i++) {
-                if(groupDataArray[i].name !== "") {
-                    let newTags = ancestralTags.concat([groupDataArray[i].name])
-                    groupDataArray[i].children = this.parseDataHelper(groupDataArray[i].children, newTags);
+                if(groupDataArray[i].name === parentTag) {
+                    onlyParentTag = i;
+                    break;
                 }
-                // this is the group with no other tags besides the parent
+            }
+        }
+        for(let i = 0; i < groupDataArray.length; i++) {
+            if(groupDataArray[i].children.length === 1) {
+                // change key to parent key
+                groupDataArray[i].children[0].key = parentTag;
+                // put it into the only tag group
+                if(onlyParentTag === -1) {
+                    groupDataArray.push({name: parentTag, children: []});
+                    onlyParentTag = groupDataArray.length - 1;
+                }
+                groupDataArray[onlyParentTag].children.push(groupDataArray[i].children[0]);
+                // then delete that one
+                groupDataArray.splice(i, 1);
+                if(i < onlyParentTag) {
+                    onlyParentTag--;
+                }
+            }
+        }
+        if(groupDataArray.length > recursiveThreshold) {
+            for(let i = 0; i < groupDataArray.length; i++) {
+                if(groupDataArray[i].name !== ancestralTags[ancestralTags.length - 1]) {
+                    // don't want to do it again for the parent tag itself
+                    let newTags = ancestralTags.concat([groupDataArray[i].name])
+                    groupDataArray[i].children = this.parseDataHelper(groupDataArray[i].children, newTags, false, supersetMap);
+                }
             }
         } 
+
         return groupDataArray;
     }
 
-    mergeSupersets(groupDataArray) {
+    /* map takes form of 
+    {
+        parentName: [child, child, child],
+        parentName: [child, child]
+    }
+    */
+    makeSupersetMap(map, parent, child) {
+        if(map[parent] === undefined) {
+            map[parent] = [child];
+        } else {
+            map[parent].push(child);
+        }
+    }
+    
+    checkSupersetMap(map, parent, child) {
+        if(map[parent] === undefined) {
+            return true;
+        } else if(map[parent].includes(child)) {
+            return true;
+        }
+        return false;
+    }
+
+    mergeSupersets(groupDataArray, topLevel, map) {
         // Check for supersets
         let i = 0; 
         while(i < groupDataArray.length - 1) {
@@ -131,6 +188,31 @@ class Data extends React.Component {
                 // if the smaller is array is j (larger index), delete it
                 // continue to next iteration of the for loop, adjusting j
                 if(smallInLarge) {
+                    // if toplevel is true, note the parent and child
+                    let parent = groupDataArray[largeArrayIndex].name;
+                    let child = groupDataArray[smallArrayIndex].name;
+                    if(topLevel) {
+                        this.makeSupersetMap(map, parent, child);
+                    } else {
+                        let superset = this.checkSupersetMap(map, parent, child);
+                        if(smallArray.length === largeArray.length) {
+                            if(superset) {
+                                // if superset and same size, choose more specific tag
+                                groupDataArray[largeArrayIndex].name = child;
+                            } else {
+                                // combine their names
+                                groupDataArray[largeArrayIndex].name = parent + "/" + child;
+                            }
+                        } else {
+                            if(!superset) {
+                                // if the ratio is greater than 1/3, combine their names
+                                if(1/(smallArray.length / largeArray.length) < 3) {
+                                    groupDataArray[largeArrayIndex].name = parent + "/" + child;
+                                }
+                            }
+                        }
+                    }
+
                     groupDataArray.splice(smallArrayIndex, 1);
                     if(smallArrayIndex < largeArrayIndex) {
                         subsumed = true;

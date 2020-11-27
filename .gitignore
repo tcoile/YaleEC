@@ -3,3 +3,4 @@ serviceAccountKey.json
 .DS_Store
 key.json
 config.py
+firestoredata.py
