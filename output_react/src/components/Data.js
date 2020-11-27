@@ -94,7 +94,7 @@ class Data extends React.Component {
             }
         }
         for(let i = 0; i < groupDataArray.length; i++) {
-            if(groupDataArray[i].children.length === 1) {
+            if(groupDataArray[i].children.length === 1 && i !== onlyParentTag) {
                 // change key to parent key
                 groupDataArray[i].children[0].key = parentTag;
                 // put it into the only tag group
@@ -108,8 +108,11 @@ class Data extends React.Component {
                 if(i < onlyParentTag) {
                     onlyParentTag--;
                 }
+                i--;
             }
         }
+
+        console.log("before recurse", onlyParentTag, groupDataArray.length);
         if(groupDataArray.length > recursiveThreshold) {
             for(let i = 0; i < groupDataArray.length; i++) {
                 if(groupDataArray[i].name !== ancestralTags[ancestralTags.length - 1]) {
@@ -119,6 +122,16 @@ class Data extends React.Component {
                 }
             }
         } 
+        
+        // and then we want to pull all the ones in the parent tag group to the parent tag itself
+        if(onlyParentTag !== -1) {
+            let onlyParentArray = groupDataArray[onlyParentTag].children;
+            groupDataArray.splice(onlyParentTag, 1);
+            // then put all of its children into the parent children
+            for(let i = 0; i < onlyParentArray.length; i++) {
+                groupDataArray.push(onlyParentArray[i]);
+            }
+        }
 
         return groupDataArray;
     }
@@ -262,8 +275,8 @@ class Data extends React.Component {
             return nodes;
         }
 
-        let links = root.links();
         flatten(root)
+        let links = root.links();
         let nodes = root.descendants();
         console.log(nodes);
         console.log(links);
