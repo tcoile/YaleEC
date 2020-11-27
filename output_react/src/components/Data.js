@@ -153,7 +153,6 @@ class Data extends React.Component {
      * We're building this visualization in the MOST d3 way, 
      * the LEAST React way possible
      * 
-     * For now, following a scheme like this: https://bl.ocks.org/ctufts/f38ef0187f98c537d791d24fda4a6ef9 
      */
     buildVisualization(data) {
         console.log(data);
@@ -162,8 +161,23 @@ class Data extends React.Component {
         // const dat = data[27];
 
         const root = d3.hierarchy(data[10]);
-        const links = root.links();
-        const nodes = root.descendants();
+        console.log(root);
+        // Returns a list of all nodes under the root.
+        function flatten(root) {
+            var nodes = [], i = 0;
+        
+            function recurse(node) {
+                if (node.children) node.children.forEach(recurse);
+                if (!node.identity) node.identity = ++i;
+                nodes.push(node);
+            }
+        
+            recurse(root);
+            return nodes;
+        }
+
+        let links = root.links();
+        let nodes = flatten(root);
 
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.id).distance(0).strength(1))
@@ -178,7 +192,7 @@ class Data extends React.Component {
             .append('svg')
             .attr('viewBox', [-width/2, -height/2, width, height])
         
-        const link = forcePlot.append('g')
+        let link = forcePlot.append('g')
                 .attr('stroke', '#999')
                 .attr('stroke-opacity', 0.6)
             .selectAll('line')
@@ -210,16 +224,66 @@ class Data extends React.Component {
                 .on("end", dragended);
         }
 
-        const node = forcePlot.append('g')
+        // Add click interactivity
+        function click(event, d) {
+            if (event.defaultPrevented) return; // ignore drag
+            console.log(d);
+            if (d.children) {
+              d._children = d.children;
+              d.children = null;
+            } else {
+              d.children = d._children;
+              d._children = null;
+            }
+            console.log(d);
+            console.log(root.descendants());
+            update();
+        }
+
+        function update() {
+            nodes = root.descendants();
+            links = root.links();
+            console.log(nodes);
+            
+            // Make a shallow copy to protect against mutation, while
+            // recycling old nodes to preserve position and velocity.
+            const old = new Map(node.data().map(d => [d.identity, d]));
+            nodes = nodes.map(d => Object.assign(old.get(d.identity) || {}, d));
+            links = links.map(d => Object.assign({}, d));
+
+            link = link.data(links, d => [d.source, d.target])
+                .join('line');
+            node = node.data(nodes, d => d.identity);
+
+            node.exit().remove();
+
+            node.enter()
+                .append('circle')
+                .attr('fill', (d) => {
+                    console.log('entering' + d.identity);
+                    return 'blue'
+                })
+                .attr('stroke', d => d.children || d._children ? null : '#fff')
+                .attr('r', 3.5)
+                .on("click", click)
+                .call(drag(simulation));
+            
+            simulation.nodes(nodes);
+            simulation.force("link").links(links);
+            simulation.restart();
+        } 
+
+        let node = forcePlot.append('g')
                 .attr('fill', '#fff')
                 .attr('stroke', '#000')
                 .attr('stroke-width', 1.5)
             .selectAll('circle')
-            .data(nodes)
+            .data(nodes, d => d.identity)
             .join('circle')
-                .attr('fill', (d) => d.children ? null : '#000')
-                .attr('stroke', d => d.children ? null : '#fff')
+                .attr('fill', (d) => d.children || d._children ? null : '#000')
+                .attr('stroke', d => d.children || d._children ? null : '#fff')
                 .attr('r', 3.5)
+                .on("click", click)
                 .call(drag(simulation))
 
         node.append("title")
