@@ -2,6 +2,7 @@ import React from "react";
 import * as d3 from "d3";
 import cloneDeep from "lodash/cloneDeep";
 import '../App.css';
+import 'Data.css'
 // import Chip from '@material-ui/core/Chip';
 
 class Data extends React.Component {
@@ -351,20 +352,42 @@ class Data extends React.Component {
             if (d.children) { // make them disappear
               d._children = d.children;
               d.children = null;
-            } else { // make them appear
+            } else if (d._children) { // make them appear, if not a leaf
               d.children = d._children;
-              d.children.map((node) => {
-                  console.log("in click interactions")
-                  console.log(node);
-                  // find where the parent is on the screen, introduce a bit of jitter (so we don't have explosions)
-                  // TODO: travel in the rough direction of our parent / grandparent 
-                  node.x = node.parent.x + Math.random() * 10;
-                  node.y = node.parent.y + Math.random() * 10;
+              d.children.map((node) => { // make children appear in the right place
+                  let delta_x = 0;
+                  let slope = 1;
+                  if (node.parent !== null && node.parent.parent != null) { // have a grandparent?
+                    // travel a bit in the rough direction of the line our parent/grandparent make
+                    delta_x = node.parent.x - node.parent.parent.x;
+                    const delta_y = node.parent.y - node.parent.parent.y;
+                    slope = delta_y / delta_x;
+                  }
+
+                  node.x = node.parent.x + delta_x * 3/4 + Math.random() * 15;
+                  node.y = node.parent.y + slope * delta_x * 3/4 + Math.random() * 15;
                   return node;
               })
               d._children = null;
             }
             update();
+        }
+
+        /**
+         * Handle mouseover interactions
+         */
+        function handleMouseOver(event, node) {
+            d3.select(this).transition()
+                .delay(30)
+                .duration(200)
+                .attr('r', (d) => d.children || d._children ? 9 : 8);
+        }
+
+        function handleMouseOut(event, node) {
+            d3.select(this).transition()
+                .delay(30)
+                .duration(200)
+                .attr('r', (d) => d.children || d._children ? 7 : 6);
         }
 
         /**
@@ -381,14 +404,13 @@ class Data extends React.Component {
 
             node = node.data(nodes, d => d.identity)
                 .join('circle')
-                    .attr('fill', (d) => {
-                        // console.log(d)
-                        return d.children || d._children ? null : color(d.data.key)
-                    })
+                    .attr('fill', (d) =>  d.children || d._children ? null : color(d.data.key))
                     .attr('stroke', (d) => d.children || d._children ? color(d.data.name) : '#fff')
                     .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
                     .attr('r',  (d) => d.children || d._children ? 7 : 6)
-                    .on("click", click)
+                    .on('click', click)
+                    .on('mouseover', handleMouseOver)
+                    .on('mouseout', handleMouseOut)
                     .call(drag(simulation));
             
             node.append("title")
@@ -411,6 +433,8 @@ class Data extends React.Component {
                 .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
                 .attr('r', (d) => d.children || d._children ? 7 : 6)
                 .on("click", click)
+                .on('mouseover', handleMouseOver)
+                .on('mouseout', handleMouseOut)
                 .call(drag(simulation))
 
         node.append("title")
