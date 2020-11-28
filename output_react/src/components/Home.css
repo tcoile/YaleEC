@@ -1,0 +1,24 @@
+.background {
+    background-image: url(../assets/dots.png);
+    background-size: cover;
+    width: 100vw;
+    height: 91vh;
+    margin-top: 9vh;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    flex-direction: column;
+    margin-bottom: 4vh;
+}
+
+.title {
+    font-family: Roboto, Arial, sans-serif;
+    font-size: xx-large;
+    font-weight: bold;
+}
