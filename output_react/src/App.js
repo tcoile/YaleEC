@@ -8,11 +8,11 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-import purple from '@material-ui/core/colors/purple';
-import green from '@material-ui/core/colors/green';
 
 import Data from "./components/Data";
 import Home from "./components/Home";
+import DataHolder from "./components/DataHolder";
+
 import './App.css';
 import {
   BrowserRouter as Router,
@@ -44,6 +44,9 @@ const useStyles = makeStyles((theme) => ({
   title: {
     flexGrow: 1,
   },
+  appBar: {
+    zIndex: theme.zIndex.drawer + 1,
+  }
 }));
 
 
@@ -68,7 +71,7 @@ export default function App() {
           <Paper style={{marginTop: "9vh"}} m={2}>
             <Switch>
               <Route path="/data">
-                <div class="svg-container"><Data /></div> 
+                <div class="svg-container"><DataHolder /></div> 
               </Route>
               <Route path="/">
                 <Home />
