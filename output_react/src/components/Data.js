@@ -255,7 +255,6 @@ class Data extends React.Component {
     /**
      * We're building this visualization in the MOST d3 way, 
      * the LEAST React way possible
-     * 
      */
     buildVisualization(data) {
         const root = d3.hierarchy(data[0]);
@@ -284,7 +283,7 @@ class Data extends React.Component {
 
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.id).distance(30).strength(0.5))
-            .force("charge", d3.forceManyBody().strength(-120))
+            .force("charge", d3.forceManyBody().strength(-100))
             .force("x", d3.forceX())
             .force("y", d3.forceY())
 
@@ -296,23 +295,23 @@ class Data extends React.Component {
             .range(d3.schemeTableau10);
 
         // Enable zooming, panning
-        // function zoomed(event) {
-        //     console.log(event);
-        //     var translateX = event.transform.x;
-        //     var translateY = event.transform.y;
-        //     var xScale = event.transform.k;
-        //     forcePlot.attr("transform", "translate(" + translateX + "," + translateY + ")scale(" + xScale + ")");
-        // }
+        function zoomed({transform}) {
+            forcePlot.attr("transform", transform);
+        }
 
-        // const zoom = d3.zoom()
-        //     // .scale(1.0)
-        //     // .scaleExtent([1, 5])
-        //     .on('zoom', zoomed);
+        const zoom = d3.zoom()
+            .scaleExtent([1, 20])
+            .on("zoom", zoomed);
 
-        const forcePlot = d3.select(this._rootNode)
+        const forceSvg = d3.select(this._rootNode)
             .append('svg')
-            .attr('viewBox', [-width/2, -height/2, width, height])
+            .attr('id', 'force-svg')
+            .attr('viewBox', [0, 0, width, height])
             .attr("preserveAspectRatio", "xMidYMid meet")
+            .call(zoom);
+        
+        const forcePlot = forceSvg.append('g')
+            
         
         let link = forcePlot.append('g')
                 .attr('stroke', '#999')
@@ -349,11 +348,20 @@ class Data extends React.Component {
         // Add click interactivity
         function click(event, d) {
             if (event.defaultPrevented) return; // ignore drag
-            if (d.children) {
+            if (d.children) { // make them disappear
               d._children = d.children;
               d.children = null;
-            } else {
+            } else { // make them appear
               d.children = d._children;
+              d.children.map((node) => {
+                  console.log("in click interactions")
+                  console.log(node);
+                  // find where the parent is on the screen, introduce a bit of jitter (so we don't have explosions)
+                  // TODO: travel in the rough direction of our parent / grandparent 
+                  node.x = node.parent.x + Math.random() * 10;
+                  node.y = node.parent.y + Math.random() * 10;
+                  return node;
+              })
               d._children = null;
             }
             update();
@@ -373,7 +381,10 @@ class Data extends React.Component {
 
             node = node.data(nodes, d => d.identity)
                 .join('circle')
-                    .attr('fill', (d) => d.children || d._children ? null : color(d.data.key))
+                    .attr('fill', (d) => {
+                        // console.log(d)
+                        return d.children || d._children ? null : color(d.data.key)
+                    })
                     .attr('stroke', (d) => d.children || d._children ? color(d.data.name) : '#fff')
                     .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
                     .attr('r',  (d) => d.children || d._children ? 7 : 6)
@@ -413,7 +424,7 @@ class Data extends React.Component {
                 .attr('y2', d => d.target.y);
             node.attr('cx', d => d.x)
                 .attr('cy', d => d.y)
-            forcePlot.attr('viewBox', [-window.innerWidth/2, -window.innerHeight/2, window.innerWidth, window.innerHeight])
+            forceSvg.attr('viewBox', [-window.innerWidth/2, -window.innerHeight/2, window.innerWidth, window.innerHeight])
         })
     }
 
