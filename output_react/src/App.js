@@ -12,7 +12,7 @@ import purple from '@material-ui/core/colors/purple';
 import green from '@material-ui/core/colors/green';
 
 import Data from "./components/Data";
-import Login from "./components/Login";
+import Home from "./components/Home";
 import './App.css';
 import {
   BrowserRouter as Router,
@@ -79,9 +79,5 @@ export default function App() {
       </ThemeProvider>
     </React.Fragment>
   );
-}
-
-function Home() {
-  return <h2>You are not currently logged in</h2>;
 }
 

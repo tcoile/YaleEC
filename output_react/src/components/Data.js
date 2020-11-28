@@ -2,7 +2,7 @@ import React from "react";
 import * as d3 from "d3";
 import cloneDeep from "lodash/cloneDeep";
 import '../App.css';
-import 'Data.css'
+import './Data.css'
 // import Chip from '@material-ui/core/Chip';
 
 class Data extends React.Component {
@@ -258,7 +258,7 @@ class Data extends React.Component {
      * the LEAST React way possible
      */
     buildVisualization(data) {
-        const root = d3.hierarchy(data[0]);
+        const root = d3.hierarchy({name: 'everything', children: data});
 
         // Returns a list of all nodes under the root.
         function flatten(root) {
