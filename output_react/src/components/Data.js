@@ -333,8 +333,11 @@ class Data extends React.Component {
         // Enable zooming, panning
         function zoomed({transform}) {
             // console.log(transform)
+            currentScale = transform.k
             forcePlot.attr("transform", transform);
         }
+
+        let currentScale = 1;
 
         const zoom = d3.zoom()
             .scaleExtent([0.3, 10])
@@ -351,7 +354,13 @@ class Data extends React.Component {
             .call(zoom);
         
         const forcePlot = forceSvg.append('g')
-            
+
+        forceSvg.call(zoom.translateTo,
+            650,
+            450); // note? WHY???? 
+        forceSvg.transition().duration(400).call(
+            zoom.scaleTo,
+            0.3);    
         /**
          * Interactivity
          */
@@ -411,8 +420,6 @@ class Data extends React.Component {
                 const tagColors = d.data.tags.map((tag) => color(tag));
                 const newData = {...d.data, colors: tagColors};
                 selectClub(newData);
-                // TODO: Call the drawer to scroll out, with d's information
-                console.log(newData);
             }
             
         
@@ -448,13 +455,21 @@ class Data extends React.Component {
         } 
 
         // hover interactions
+        const tooltip = d3.select(this._rootNode).append('div')
+            .attr('class', 'hidden tooltip');
+
         function handleMouseOver(event, node) {
+            tooltip.classed('hidden', false)
+                .attr('style', 'left:' + (event.clientX + 10*currentScale) + 'px; top:' + (event.clientY - 100) + 'px')
+                .html(`<p>${node.data.name}</p>`);
+
             d3.select(this).transition()
                 .duration(150)
                 .attr('r', (d) => d.children || d._children ? 10 : 8);
         }
 
-        function handleMouseOut(event, node) {
+        function handleMouseOut() {
+            tooltip.classed('hidden', true);
             d3.select(this).transition()
                 .delay(30)
                 .duration(200)
@@ -476,13 +491,22 @@ class Data extends React.Component {
             event.stopPropagation();
             let x, y;
             const center = getCentroid(element)
-            x = center[0] + width/2;
+            x = center[0];
             y = center[1];
+            // center element
             await forceSvg.transition().duration(650).call(
                 zoom.translateTo,
                 x,
                 y).end()
-            
+            // zoom it
+            await forceSvg.transition().duration(400).call(zoom.scaleTo, 3).end()
+            // move it
+            x += width/(currentScale*2.5)
+            forceSvg.transition().duration(650).call(
+                zoom.translateTo,
+                x, 
+                y
+            )
         }
 
         async function centerElement(event, element, k) {
