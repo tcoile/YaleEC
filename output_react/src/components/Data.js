@@ -330,8 +330,11 @@ class Data extends React.Component {
         // Enable zooming, panning
         function zoomed({transform}) {
             // console.log(transform)
+            currentScale = transform.k
             forcePlot.attr("transform", transform);
         }
+
+        let currentScale = 1;
 
         const zoom = d3.zoom()
             .scaleExtent([0.2, 10])
@@ -348,7 +351,14 @@ class Data extends React.Component {
             .call(zoom);
         
         const forcePlot = forceSvg.append('g')
-            
+
+        forceSvg.call(zoom.translateTo,
+            650,
+            450);
+        forceSvg.transition().duration(400).call(
+            zoom.scaleTo,
+            0.3
+        )    
         /**
          * Interactivity
          */
@@ -406,6 +416,7 @@ class Data extends React.Component {
                 positionLeaf(event, this);
                 // TODO: Call the drawer to scroll out, with d's information
                 console.log(d);
+                console.log(color(d.data.tags[0]))
             }
             
         
@@ -469,13 +480,22 @@ class Data extends React.Component {
             event.stopPropagation();
             let x, y;
             const center = getCentroid(element)
-            x = center[0] + width/2;
+            x = center[0];
             y = center[1];
+            // center element
             await forceSvg.transition().duration(650).call(
                 zoom.translateTo,
                 x,
                 y).end()
-            
+            // zoom it
+            await forceSvg.transition().duration(400).call(zoom.scaleTo, 3).end()
+            // move it
+            x += width/(currentScale*2.5)
+            forceSvg.transition().duration(650).call(
+                zoom.translateTo,
+                x, 
+                y
+            )
         }
 
         async function centerElement(event, element, k) {
