@@ -8,8 +8,6 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-import purple from '@material-ui/core/colors/purple';
-import green from '@material-ui/core/colors/green';
 
 import Data from "./components/Data";
 import Home from "./components/Home";

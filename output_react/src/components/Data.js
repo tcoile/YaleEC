@@ -354,11 +354,10 @@ class Data extends React.Component {
 
         forceSvg.call(zoom.translateTo,
             650,
-            450);
+            450); // note? WHY???? 
         forceSvg.transition().duration(400).call(
             zoom.scaleTo,
-            0.3
-        )    
+            0.3);    
         /**
          * Interactivity
          */
@@ -452,13 +451,21 @@ class Data extends React.Component {
         } 
 
         // hover interactions
+        const tooltip = d3.select(this._rootNode).append('div')
+            .attr('class', 'hidden tooltip');
+
         function handleMouseOver(event, node) {
+            tooltip.classed('hidden', false)
+                .attr('style', 'left:' + (event.clientX + 10*currentScale) + 'px; top:' + (event.clientY - 100) + 'px')
+                .html(`<p>${node.data.name}</p>`);
+
             d3.select(this).transition()
                 .duration(150)
                 .attr('r', (d) => d.children || d._children ? 10 : 8);
         }
 
-        function handleMouseOut(event, node) {
+        function handleMouseOut() {
+            tooltip.classed('hidden', true);
             d3.select(this).transition()
                 .delay(30)
                 .duration(200)
