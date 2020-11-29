@@ -9,7 +9,7 @@ import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 
-import Data from "./components/Data";
+import Search from "./components/Search";
 import Home from "./components/Home";
 import DataHolder from "./components/DataHolder";
 
@@ -60,11 +60,11 @@ export default function App() {
           <div className={classes.root}>
             <AppBar position="fixed">
               <Toolbar>
-                <Typography variant="h6" className={classes.title}>
+                <Typography variant="h6" className={classes.title} to="/">
                   Yale Extracurricular Search
                 </Typography>
-                <Button style={{color: '#4f79a7'}} component={Link} to="/">Home</Button>
-                <Button style={{color: '#4f79a7'}} component={Link} to="/data">Organizations</Button>
+                <Button style={{color: '#4f79a7'}} component={Link} to="/data">Explore</Button>
+                <Button style={{color: '#4f79a7'}} component={Link} to="/search">Search</Button>
               </Toolbar>
             </AppBar>
           </div>
@@ -75,6 +75,9 @@ export default function App() {
               </Route>
               <Route path="/">
                 <Home />
+              </Route>
+              <Route>
+                <Search />
               </Route>
             </Switch>
           </Paper>

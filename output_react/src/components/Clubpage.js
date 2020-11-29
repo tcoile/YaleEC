@@ -14,7 +14,8 @@ const styles = theme => ({
           '& > *': {
           margin: theme.spacing(0.5),
         },
-        marginBottom: '15px'
+        marginBottom: '15px',
+        flexWrap: 'wrap'
     },
     title: {
       fontSize: 'xx-large',
@@ -37,12 +38,35 @@ class Clubpage extends React.Component{
         super(props);
     }
 
+    // kindly written by Jon Kantner at https://css-tricks.com/converting-color-spaces-in-javascript/
+    hexToRGB(h) {
+        let r = 0, g = 0, b = 0;
+      
+        // 3 digits
+        if (h.length == 4) {
+          r = "0x" + h[1] + h[1];
+          g = "0x" + h[2] + h[2];
+          b = "0x" + h[3] + h[3];
+      
+        // 6 digits
+        } else if (h.length == 7) {
+          r = "0x" + h[1] + h[2];
+          g = "0x" + h[3] + h[4];
+          b = "0x" + h[5] + h[6];
+        }
+        
+        return "rgb("+ +r + "," + +g + "," + +b + ", 0.4)";
+      }
+
     render() {
         const { classes, clubInfo } = this.props;
-
-        const tagChips = clubInfo.tags.map((tag => 
-            <Chip key={tag.toString()} label={tag}></Chip>
-        ))
+        const tagChips = clubInfo.tags ? 
+            clubInfo.tags.map(((tag, index) => 
+                <Chip key={tag.toString()} 
+                label={tag} 
+                // okay there has to be a faster way to do this
+                style={{backgroundColor: this.hexToRGB(clubInfo.colors[index])}}></Chip>))
+            : <div></div>
 
         const emailDivs = clubInfo.contacts ? 
             clubInfo.contacts.map((contact => <p className={classes.dense}> {contact} </p>))
@@ -50,14 +74,14 @@ class Clubpage extends React.Component{
 
         return (
             <div className={classes.drawerMain}>
-                <div style={{display: 'flex', alignItems: 'flex-end', alignContent: 'center'}}> 
-                    <IconButton onClick={this.props.handleDrawerClose} style={{marginBlockEnd: '0.25em'}}>
+                <div style={{display: 'flex', alignItems: 'flex-start', alignContent: 'center'}}> 
+                    <IconButton onClick={this.props.handleDrawerClose} style={{marginBlockStart: '1.15em'}}>
                         <ChevronRightIcon/>
                     </IconButton>
                     <p className={classes.title}> {clubInfo.name} </p>
                 </div>
                 <div className={classes.chipDiv}>{tagChips}</div>
-                <ReactPlayer width="100%" url={clubInfo.videoLink} />
+                <ReactPlayer width="100%" url={clubInfo.videoLink ? clubInfo.videoLink : 'https://www.youtube.com/watch?v=DLzxrzFCyOs'} />
                 <p style={{fontWeight: 'bold', fontSize: 'large'}}> Mission </p>
                 <p> {clubInfo.mission} </p>
                 <p style={{fontWeight: 'bold', fontSize: 'large'}}> Links </p>

@@ -82,12 +82,12 @@ class DataHolder extends React.Component{
     super(props);
     // this.handleDrawerClose = this.handleDrawerClose.bind(this);
     this.state = {
-      open: true,
+      open: false,
       clubInfo: {}
     }
   }
 
-  handleDrawerOpen() {
+  handleDrawerOpen () {
     this.setState({open: true});
   };
 
@@ -97,29 +97,28 @@ class DataHolder extends React.Component{
 
   selectClub = (value) => {
     this.setState({clubInfo: value})
+    this.handleDrawerOpen();
   };
 
   render() {
     const { classes } = this.props;
 
-    const clubInfo = {
-      name: "Yale Women's Ultimate Team",
-      tags: ["Cultural", "Advocacy/Policy", "Dance"],
-      mission : "Yale Undergraduates at Connecticut Hospice (YUCH) is an organization that provides the unique opportunity to work at a palliative care facility a short drive away from campus in Branford, CT. Volunteers provide a service that is crucial to the Hospice organization and uplifting to the patients. There are a variety of volunteer departments ranging from patient assistance to art therapy, which all immerse volunteers in the real patient care experience.",
-      url: "www.google.com",
-      videoLink: "https://www.youtube.com/watch?v=MuPvStdEt58"
-    }
+    // const clubInfo = {
+    //   name: "Yale Women's Ultimate Team",
+    //   tags: ["Cultural", "Advocacy/Policy", "Dance"],
+    //   mission : "Yale Undergraduates at Connecticut Hospice (YUCH) is an organization that provides the unique opportunity to work at a palliative care facility a short drive away from campus in Branford, CT. Volunteers provide a service that is crucial to the Hospice organization and uplifting to the patients. There are a variety of volunteer departments ranging from patient assistance to art therapy, which all immerse volunteers in the real patient care experience.",
+    //   url: "www.google.com",
+    //   videoLink: "https://www.youtube.com/watch?v=MuPvStdEt58"
+    // }
     return (
       <div className={classes.root}>
         <CssBaseline />
         <main
-          className={clsx(classes.content, {
-            [classes.contentShift]: open,
-          })}
+          className={classes.content}
           // gives it class classes.content and classes.contentShift if open
         >
           <div className={classes.svgContainer}> 
-              <Data selectClub={this.selectClub}/>
+              <Data selectClub={this.selectClub} />
           </div>
           {/* <IconButton
               color="inherit"
@@ -141,7 +140,7 @@ class DataHolder extends React.Component{
             paper: classes.drawerPaper,
           }}
         >
-          <Clubpage handleDrawerClose={this.handleDrawerClose} clubInfo={clubInfo}/>
+          <Clubpage handleDrawerClose={this.handleDrawerClose} clubInfo={this.state.clubInfo}/>
         </Drawer>
       </div>
     );

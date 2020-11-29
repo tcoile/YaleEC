@@ -7,6 +7,9 @@ import { linkVertical } from "d3";
 // import Chip from '@material-ui/core/Chip';
 
 class Data extends React.Component {
+    constructor(props) {
+        super(props);
+    }
 
     async componentDidMount() {
         const data = await this.getData();
@@ -334,7 +337,7 @@ class Data extends React.Component {
         }
 
         const zoom = d3.zoom()
-            .scaleExtent([0.2, 10])
+            .scaleExtent([0.3, 10])
             .on("zoom", zoomed);
 
         const width = 1000;
@@ -378,6 +381,7 @@ class Data extends React.Component {
                 .on("end", dragended);
         }
 
+        const {selectClub} = this.props;
         // Click interactions
         async function click(event, d) {
             if (event.defaultPrevented) return; // ignore drag
@@ -404,8 +408,11 @@ class Data extends React.Component {
               d._children = null;
             } else { // handles leaf actions
                 positionLeaf(event, this);
+                const tagColors = d.data.tags.map((tag) => color(tag));
+                const newData = {...d.data, colors: tagColors};
+                selectClub(newData);
                 // TODO: Call the drawer to scroll out, with d's information
-                console.log(d);
+                console.log(newData);
             }
             
         
