@@ -4,3 +4,4 @@ serviceAccountKey.json
 key.json
 config.py
 firestoredata.py
+env/

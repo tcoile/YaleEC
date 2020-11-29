@@ -71,7 +71,7 @@ export default function App() {
           <Paper style={{marginTop: "9vh"}} m={2}>
             <Switch>
               <Route path="/data">
-                <div class="svg-container"><DataHolder /></div> 
+                <div className="svg-container"><DataHolder /></div> 
               </Route>
               <Route path="/">
                 <Home />
