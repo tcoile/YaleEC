@@ -83,11 +83,11 @@ class Clubpage extends React.Component{
                 <div className={classes.chipDiv}>{tagChips}</div>
                 <ReactPlayer width="100%" url={clubInfo.videoLink ? clubInfo.videoLink : 'https://www.youtube.com/watch?v=DLzxrzFCyOs'} />
                 <p style={{fontWeight: 'bold', fontSize: 'large'}}> Mission </p>
-                <p> {clubInfo.mission} </p>
+                <p> {clubInfo.mission ? clubInfo.mission : "Oops, this club hasn't written a mission yet."} </p>
                 <p style={{fontWeight: 'bold', fontSize: 'large'}}> Links </p>
                 <div style={{display:'flex', alignItems: 'center', alignContent: 'center'}}> 
                     <LanguageIcon />  
-                    <p style={{marginLeft: 10}}> {clubInfo.url} </p>
+                    <p style={{marginLeft: 10}}> {clubInfo.url ? clubInfo.url : 'no website to show'} </p>
                 </div>
                 <div style={{display:'flex', alignItems: 'center', alignContent: 'center'}}> 
                     <MailOutlineIcon  style={{marginRight: 10}}/> 

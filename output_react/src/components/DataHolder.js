@@ -1,12 +1,10 @@
 import React from 'react';
-import clsx from 'clsx';
 import Data from './Data';
 import Clubpage from './Clubpage';
 
 import { withStyles } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import IconButton from '@material-ui/core/IconButton';
 
 const drawerWidth = 50;
 
