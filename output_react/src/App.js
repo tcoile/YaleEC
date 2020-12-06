@@ -12,6 +12,8 @@ import Button from '@material-ui/core/Button';
 import Search from "./components/Search";
 import Home from "./components/Home";
 import DataHolder from "./components/DataHolder";
+import ClubForm from "./components/ClubForm";
+
 
 import './App.css';
 import {
@@ -35,7 +37,7 @@ const theme = createMuiTheme({
 // this seems to be materialUI's convoluted way of doing CSS, and I'm not sure why...
 // except you can use theme.whatever then within your CSS
 const useStyles = makeStyles((theme) => ({
-  root: {
+  appRoot: {
     flexGrow: 1,
   },
   menuButton: {
@@ -49,7 +51,6 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-
 export default function App() {
   const classes = useStyles(); // pass theme object in in order to use it
   return (
@@ -57,27 +58,30 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <Router>
-          <div className={classes.root}>
+          <div className={classes.appRoot}>
             <AppBar position="fixed">
               <Toolbar>
-                <Typography variant="h6" className={classes.title} to="/">
+                <Typography variant="h6" className={classes.title}>
                   Yale Extracurricular Search
                 </Typography>
-                <Button style={{color: '#4f79a7'}} component={Link} to="/data">Explore</Button>
+                <Button style={{color: '#4f79a7'}} component={Link} to="/explore">Explore</Button>
                 <Button style={{color: '#4f79a7'}} component={Link} to="/search">Search</Button>
               </Toolbar>
             </AppBar>
           </div>
-          <Paper style={{marginTop: "9vh"}} m={2}>
+          <Paper style={{marginTop: "9vh", height: "91vh"}} m={2}>
             <Switch>
-              <Route path="/data">
+              <Route path="/explore">
                 <div className="svg-container"><DataHolder /></div> 
+              </Route>
+              <Route path="/search">
+                <Search />
+              </Route>
+              <Route path="/add">
+                <ClubForm />
               </Route>
               <Route path="/">
                 <Home />
-              </Route>
-              <Route>
-                <Search />
               </Route>
             </Switch>
           </Paper>
