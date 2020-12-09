@@ -13,9 +13,9 @@ class Data extends React.Component {
 
     async componentDidMount() {
         const data = await this.getData();
-        this.buildVisualization(data);
-        // const parsedData = this.parseData(data);
-        // this.buildVisualization(parsedData);
+        // this.buildVisualization(data);
+        const parsedData = this.parseData(data);
+        this.buildVisualization(parsedData);
     }
 
     async getData() {

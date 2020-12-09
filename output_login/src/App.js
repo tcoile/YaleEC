@@ -8,19 +8,8 @@ import CssBaseline from '@material-ui/core/CssBaseline'
 import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
-
-import Search from "./components/Search";
-import DataHolder from "./components/DataHolder";
-import ClubForm from "./components/ClubForm";
-
-
 import './App.css';
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link,
-} from "react-router-dom";
+
 
 const theme = createMuiTheme({
   palette: {
@@ -52,42 +41,29 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function App() {
-  const classes = useStyles(); // pass theme object in in order to use it
+  const classes = useStyles(); 
   return (
     <React.Fragment>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Router>
           <div className={classes.appRoot}>
             <AppBar style={{backgroundColor: '#fff'}} position="fixed">
               <Toolbar>
                 <Typography variant="h6" className={classes.title}>
                   Yale Extracurricular Search
                 </Typography>
-                <Button style={{color: '#4f79a7'}} component={Link} to="/explore">Explore</Button>
-                <Button style={{color: '#4f79a7'}} component={Link} to="/search">Search</Button>
               </Toolbar>
             </AppBar>
           </div>
           <Paper style={{marginTop: "9vh", height: "91vh"}} m={2}>
-            <Switch>
-              <Route path="/explore">
-                <div className="svg-container"><DataHolder /></div> 
-              </Route>
-              <Route path="/search">
-                <Search />
-              </Route>
-              <Route path="/add">
-                <ClubForm />
-              </Route>
-              <Route path="/">
-                <div className="svg-container"><DataHolder /></div> 
-              </Route>
-            </Switch>
+            <div className="background"> 
+              <div className="center">
+                  <p className="title"> What are you doing outside of class? </p>
+                  <Button color="secondary" href='login'> login with CAS </Button>
+              </div>
+            </div>
           </Paper>
-        </Router>
       </ThemeProvider>
     </React.Fragment>
   );
 }
-

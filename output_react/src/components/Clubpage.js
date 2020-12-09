@@ -1,4 +1,5 @@
 import React from 'react';
+import { withRouter } from 'react-router-dom'
 import { withStyles } from '@material-ui/core/styles';
 import ReactPlayer from "react-player";
 import IconButton from '@material-ui/core/IconButton';
@@ -58,6 +59,15 @@ class Clubpage extends React.Component{
         return "rgb("+ +r + "," + +g + "," + +b + ", 0.4)";
       }
 
+    sendToForm = () => {
+        this.props.history.push({
+            pathname: "/add",
+            state: {
+                clubName: this.props.clubInfo.name
+            }
+        });
+    }
+
     render() {
         const { classes, clubInfo } = this.props;
         const tagChips = clubInfo.tags ? 
@@ -93,9 +103,10 @@ class Clubpage extends React.Component{
                     <MailOutlineIcon  style={{marginRight: 10}}/> 
                     {emailDivs}
                 </div>
+                <p style={{fontStyle: 'italic', color: '#4f79a7', cursor: 'pointer'}} onClick={this.sendToForm}> is this your organization? click to update information </p>
             </div>
         )
     }
 }
 
-export default withStyles(styles, {withTheme: true})(Clubpage)
+export default withRouter(withStyles(styles, {withTheme: true})(Clubpage))

@@ -11,6 +11,7 @@ import json
 
 # Authentication
 from flask_cas import CAS, login_required
+from functools import wraps
 
 # Firebase Modules
 from firebase_admin import credentials, firestore, initialize_app
@@ -27,6 +28,18 @@ db = firestore.client()
 CORS(app)
 cas = CAS(app)
 
+def login_redirect(function):
+    @wraps(function)
+    def wrap(*args, **kwargs):
+        if 'CAS_USERNAME' not in flask.session:
+            flask.session['CAS_AFTER_LOGIN_SESSION_URL'] = (
+                flask.request.script_root +
+                flask.request.full_path
+            )
+            return flask.redirect('/home')
+        else:
+            return function(*args, **kwargs)
+    return wrap
 
 
 # set JSON encoder to handle dates the way we want
@@ -77,19 +90,29 @@ def get_organizations():
     #     tester.append(doc.to_dict())
     # return jsonify(tester)
 
+# login_required redirects to login
+# login serves up our home 'login' page
+
+# on button click on home 'login' page, we call method 'cas-authenticate', with next=/
+@app.route('/home')
+@app.route('/home/<path:filename>')
+def home(filename='index.html'): 
+    flask.session['CAS_AFTER_LOGIN_SESSION_URL'] = '/'
+    if (filename == 'index.html' or filename == 'manifest.json'):
+        full_url = f'http://localhost:3001/' + filename
+    else:
+        full_url = f'http://localhost:3001/home' + filename
+    
+    return requests.get(full_url).content
+
 @app.route('/')
 @app.route('/<path:filename>')
-@login_required
+@login_redirect
 def load_react(filename = "index.html"):
+    app.logger.info('got to home')
     app.logger.info(filename)
     full_url = f'http://localhost:3000/' + filename
     app.logger.info(full_url)
     return requests.get(full_url).content
-    # resp = Response()
-    # response = requests.get(full_url)
-    # resp.content = response.content
-    # resp.status_code = response.status_code
-    # resp.headers['Access-Control-Allow-Origin'] = '*'
-    # return Response(resp.content, resp.status_code, resp.headers)
-
+    
 app.run(debug=True)

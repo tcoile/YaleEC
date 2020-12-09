@@ -64,7 +64,7 @@ const MenuProps = {
   },
 };
 
-const tags = ['AAC Affiliate Org', 
+const tags = ['AAAC Affiliate Org', 
     'Academic', 
     'Administrative', 
     'Advocacy/Policy', 
@@ -113,22 +113,22 @@ class Step3 extends React.Component {
         this.wrapper = React.createRef();
         this.state = {
             open: false,
-            clubTags: [],
-            mission: ''
+            clubTags: this.props.clubInfo ? this.props.clubInfo.tags : [],
+            mission: (this.props.clubInfo ? this.props.clubInfo.mission : ''),
+            website: (this.props.clubInfo ? this.props.clubInfo.website : ''),
+            youtube: (this.props.clubInfo ? this.props.clubInfo.youtube : ''),
+            contact: (this.props.clubInfo ? this.props.clubInfo.contact : ''),
         };
     }
 
-    setClubTag(value) {
-        this.setState({clubTags: value})
-    }
-
-    handleMissionChange = (event) => {
-        this.setState({mission: event.target.value});
-    }
     // changes state 
     handleChange = (event) => {
         this.setClubTag(event.target.value);
     };
+
+    setClubTag(value) {
+        this.setState({clubTags: value})
+    }
 
     // changes state for multiple, which is what we want
     handleChangeMultiple = (event) => {
@@ -142,20 +142,30 @@ class Step3 extends React.Component {
         this.setClubTag(value);
     };
 
-    handleDelete = (value) => {
-        console.log(value);
+    handleDelete = (chip) => {
+        console.log(chip);
+    }
+
+    handleSubmit = () => {
+        const clubInfo = {
+            name: this.props.clubName,
+            mission: this.state.mission,
+            tags: this.state.clubTags,
+            website: this.state.website,
+            youtube: this.state.youtube,
+            contact: this.state.contact
+        }
+        this.props.handleSubmit(clubInfo);
     }
 
     render() {    
         const { classes } = this.props;
         return (
             <div className={classes.stepRoot}>
-                <p className={classes.title}> Yale Ramona </p>
+                <p className={classes.title}> {this.props.clubName} </p>
                 <h3 style={{marginBottom: 0}}> Tags </h3>
                 <FormControl className={classes.formControl}>
                     <Select
-                        labelId="demo-mutiple-chip-label"
-                        id="demo-mutiple-chip"
                         multiple
                         value={this.state.clubTags}
                         onChange={this.handleChange}
@@ -164,7 +174,14 @@ class Step3 extends React.Component {
                         renderValue={(selected) => (
                             <div className={classes.chips} ref={this.wrapper}>
                             {selected.map((value) => (
-                                <Chip key={value} label={value} className={classes.chip}/>
+                                <Chip 
+                                    key={value} 
+                                    label={value} 
+                                    className={classes.chip} 
+                                    // onDelete={() => this.handleDelete(value)} 
+                                    // onMouseDown={(event) => {
+                                    // event.stopPropagation();}}
+                                />
                             ))}
                             </div>
                         )}
@@ -182,7 +199,7 @@ class Step3 extends React.Component {
                     multiline
                     rows={4}
                     value={this.state.mission}
-                    onChange={this.handleMissionChange}
+                    onChange={(event) => this.setState({mission: event.target.value})}
                     variant="outlined"
                     style={{width: '50vw'}}
                 >
@@ -196,19 +213,41 @@ class Step3 extends React.Component {
                         
                     </div>
                     <div style={{display: 'flex', flexDirection: 'column'}}>
-                        <TextField defaultValue={this.state.website} variant="standard" size="small" className={classes.linkText}></TextField>
+                        {/* youtube link */}
+                        <TextField 
+                            style={{width: 300}} 
+                            value={this.state.youtube}
+                            variant="standard" size="small" 
+                            className={classes.linkText}
+                            onChange={(event) => this.setState({youtube: event.target.value})}
+                        >   
+                        </TextField>
                         <div>
-                            <TextField style={{marginRight: 5}} defaultValue={this.state.email} variant="standard" size="small"className={classes.linkText} ></TextField>
-                            <TextField defaultValue={this.state.email} variant="standard" size="small" className={classes.linkText}></TextField>
-                        </div>                        <div>
-                            <TextField style={{marginRight: 5}} defaultValue={this.state.email} variant="standard" size="small"className={classes.linkText} ></TextField>
-                            <TextField defaultValue={this.state.email} variant="standard" size="small" className={classes.linkText}></TextField>
+                            {/* website */}
+                            <TextField 
+                                style={{marginRight: 5, width: 300}} 
+                                value={this.state.website}
+                                variant="standard" size="small" 
+                                className={classes.linkText} 
+                                onChange={(event) => this.setState({website: event.target.value})}
+                                ></TextField>
+                            {/* <TextField defaultValue={this.state.email} variant="standard" size="small" className={classes.linkText}></TextField> */}
+                        </div>                        
+                        <div>
+                            <TextField 
+                                style={{marginRight: 5}} 
+                                value={this.state.contact} 
+                                variant="standard" size="small"
+                                className={classes.linkText}
+                                onChange={(event) => this.setState({contact: event.target.value})}
+                            ></TextField>
+                            {/* <TextField defaultValue={this.state.email} variant="standard" size="small" className={classes.linkText}></TextField> */}
                         </div>
                     </div>
                 </div>
                 <div style={{display: 'flex', justifyContent: 'flex-end', width: '50vw', marginTop: 30}}>
-                    <Button style={{marginRight: 20}}> back </Button>
-                    <Button variant="contained" style={{backgroundColor: '#4f79a7', color: 'white'}}> submit </Button>
+                    <Button style={{marginRight: 20}} onClick={this.props.handleBack}> back </Button>
+                    <Button variant="contained" style={{backgroundColor: '#4f79a7', color: 'white'}} onClick={this.handleSubmit}> submit </Button>
                 </div>
             </div>
         )
