@@ -3,7 +3,6 @@ import * as d3 from "d3";
 import cloneDeep from "lodash/cloneDeep";
 import '../App.css';
 import './Data.css'
-import { linkVertical } from "d3";
 // import Chip from '@material-ui/core/Chip';
 
 class Data extends React.Component {
@@ -261,15 +260,22 @@ class Data extends React.Component {
          */
     
         const root = d3.hierarchy({name: 'everything', children: data});
+        console.log(data);
+        console.log(root);
+        let clusters = [];
 
         // Adds an identity field to each node - useful for data joins
         // Also adds a cluster ID to each node - useful for blobs
         function flatten(root) {
-            let clusters = [], i = 0, cluster = 0;
+            let i = 0, cluster = 0;
         
             function recurse(node) {
                 if (node.children) {
                     node.children.forEach(recurse);
+                }
+                if (node.children && node.depth > 1) {
+                    node._children = node.children;
+                    node.children = null;
                 }
                 if (!node.identity) node.identity = ++i;
             }
@@ -279,25 +285,20 @@ class Data extends React.Component {
                     node.children.forEach(recurseCluster);
                 }
                 node.cluster = cluster;
-                if(clusters[cluster] === undefined) {
-                    clusters[cluster] = [];
-                }
-                clusters[cluster].push(node);
             }
-        
-            recurse(root);
             root.children.forEach((child) => {
                 recurseCluster(child);
                 cluster++;
             })
-            return clusters;
+            recurse(root);
+            
         }
 
-        const clusters = flatten(root)
-        console.log(clusters);
+        flatten(root)
 
         function getLinks() { // remove links from root to all children
             const links = root.links();
+            console.log(links);
             // if link.source.identity == root.identity, delete this link
             while(links[0].source.identity === root.identity) {
                 links.shift();
@@ -313,17 +314,28 @@ class Data extends React.Component {
 
         let links = getLinks();
         let nodes = getNodes();
+        
+        // set up clusters appropriately
+        nodes.forEach((node) => {
+            if(clusters[node.cluster] === undefined) {
+                clusters[node.cluster] = [];
+            }
+            clusters[node.cluster].push(node);
+        })
 
         /**
          * Create force simulation, color schemes, and overall svg
          */
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.identity)
-                .distance((d) => (d.target.children || d.target._children) ? 20 : 10)
+                .distance((d) => (d.target.children || d.target._children) ? 35 : 10)
                 .strength(1.6))
             .force("charge", d3.forceManyBody().strength((d) => {
-                return d.children || d._children ? -200 : -60;
+                return d.children || d._children ? -200 : -50;
             }))
+            .force('collision', d3.forceCollide().radius(function(d) {
+                return d.children || d._children ? 15: 7;
+              }))
             .force("x", d3.forceX())
             .force("y", d3.forceY())
 
@@ -341,7 +353,7 @@ class Data extends React.Component {
         let currentScale = 1;
 
         const zoom = d3.zoom()
-            .scaleExtent([0.3, 10])
+            .scaleExtent([0.3, 3])
             .on("zoom", zoomed);
 
         const width = 1000;
@@ -397,11 +409,17 @@ class Data extends React.Component {
             if (event.defaultPrevented) return; // ignore drag
             // handles tag actions
             if (d.children) { // make them disappear
+                const descendants = d.descendants();
+              clusters[d.cluster] = clusters[d.cluster].filter((thing) => {
+                  return (descendants.filter((node) => node.identity === thing.identity).length === 1) ? 0 : 1;
+              });
               d._children = d.children;
               d.children = null;
             } else if (d._children) { // make them appear, if not a leaf
               centerElement(event, this, 4);
               d.children = d._children;
+              const descendants = d.descendants();
+              descendants.forEach((kid) => clusters[kid.cluster].push(kid));
               d.children.map((node) => { // make children appear in the right place
                   let delta_x = 0;
                   let slope = 1;
@@ -417,7 +435,11 @@ class Data extends React.Component {
               })
               d._children = null;
             } else { // handles leaf actions
-                positionLeaf(event, this);
+                await positionLeaf(event, this);
+                d3.select(this).transition()
+                    .duration(750)
+                    .attr('fill', (d) => d3.rgb(color(d.data.key)).darker(1))
+                    .attr('r', 8);
                 const tagColors = d.data.tags.map((tag) => color(tag));
                 const newData = {...d.data, colors: tagColors};
                 selectClub(newData);
@@ -461,10 +483,12 @@ class Data extends React.Component {
 
         function handleMouseOver(event, node) {
             tooltip.classed('hidden', false)
-                .attr('style', 'left:' + (event.clientX + 10*currentScale) + 'px; top:' + (event.clientY - 100) + 'px')
+                .attr('style', 'left:' + (event.clientX + 10*currentScale) + 'px; top:' + (event.clientY - 10*currentScale) + 'px')
                 .html(`<p>${node.data.name}</p>`);
 
-            d3.select(this).transition()
+            d3.select(this)
+                .attr('cursor', 'pointer')
+                .transition()
                 .duration(150)
                 .attr('r', (d) => d.children || d._children ? 10 : 8);
         }
@@ -494,20 +518,15 @@ class Data extends React.Component {
             const center = getCentroid(element)
             x = center[0];
             y = center[1];
-            // center element
-            await forceSvg.transition().duration(650).call(
-                zoom.translateTo,
-                x,
-                y).end()
             // zoom it
-            await forceSvg.transition().duration(400).call(zoom.scaleTo, 3).end()
+            await forceSvg.transition().duration(10).call(zoom.scaleTo, 3).end();
             // move it
             x += width/(currentScale*2.5)
-            forceSvg.transition().duration(650).call(
+            await forceSvg.transition().duration(650).call(
                 zoom.translateTo,
                 x, 
                 y
-            )
+            ).end();
         }
 
         async function centerElement(event, element, k) {
