@@ -3,7 +3,6 @@ import * as d3 from "d3";
 import cloneDeep from "lodash/cloneDeep";
 import '../App.css';
 import './Data.css'
-import { linkVertical } from "d3";
 // import Chip from '@material-ui/core/Chip';
 
 class Data extends React.Component {
@@ -13,9 +12,9 @@ class Data extends React.Component {
 
     async componentDidMount() {
         const data = await this.getData();
-        this.buildVisualization(data);
-        // const parsedData = this.parseData(data);
-        // this.buildVisualization(parsedData);
+        // this.buildVisualization(data);
+        const parsedData = this.parseData(data);
+        this.buildVisualization(parsedData);
     }
 
     async getData() {
@@ -261,7 +260,8 @@ class Data extends React.Component {
          */
     
         const root = d3.hierarchy({name: 'everything', children: data});
-
+        console.log(data);
+        console.log(root);
         let clusters = [];
 
         // Adds an identity field to each node - useful for data joins
@@ -298,6 +298,7 @@ class Data extends React.Component {
 
         function getLinks() { // remove links from root to all children
             const links = root.links();
+            console.log(links);
             // if link.source.identity == root.identity, delete this link
             while(links[0].source.identity === root.identity) {
                 links.shift();
@@ -485,7 +486,9 @@ class Data extends React.Component {
                 .attr('style', 'left:' + (event.clientX + 10*currentScale) + 'px; top:' + (event.clientY - 10*currentScale) + 'px')
                 .html(`<p>${node.data.name}</p>`);
 
-            d3.select(this).transition()
+            d3.select(this)
+                .attr('cursor', 'pointer')
+                .transition()
                 .duration(150)
                 .attr('r', (d) => d.children || d._children ? 10 : 8);
         }
