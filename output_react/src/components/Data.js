@@ -12,7 +12,6 @@ class Data extends React.Component {
 
     async componentDidMount() {
         const data = await this.getData();
-        // this.buildVisualization(data);
         const parsedData = this.parseData(data);
         this.buildVisualization(parsedData);
     }
@@ -23,6 +22,23 @@ class Data extends React.Component {
         }).catch(() => console.log("could not fetch organizations"));
         let jsonRes = await response.json().catch(() => console.log("not a valid json thing"));
         return jsonRes;
+    }
+
+    // once again, credit to https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
+    alphaSort(data) {
+        data.sort(function(a, b) {
+            var nameA = a.name.toUpperCase(); // ignore upper and lowercase
+            var nameB = b.name.toUpperCase(); // ignore upper and lowercase
+            if (nameA < nameB) {
+              return -1;
+            }
+            if (nameA > nameB) {
+              return 1;
+            }
+          
+            // names must be equal
+            return 0;
+          });
     }
 
     parseData(data) {
@@ -40,6 +56,7 @@ class Data extends React.Component {
         let map = {};
         // Further Nesting is possible by recursing on these methods
         let newThing = this.parseDataHelper(data, [], true, map);
+        this.alphaSort(newThing);
         return newThing;
     }
 
