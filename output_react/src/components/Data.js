@@ -337,16 +337,22 @@ class Data extends React.Component {
 
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.identity)
-                .distance((d) => (d.target.children || d.target._children) ? 100 : 50)
-                .strength(1.2))
+                .distance((d) => (d.target.children || d.target._children) ? 80 : 45)
+                .strength(1.8))
             .force("charge", d3.forceManyBody().strength((d) => {
                 return d.children || d._children ? -200 : -50;
             }))
             .force('collision', d3.forceCollide().radius(function(d) {
                 return d.children || d._children ? 15: 11;
               }))
-            .force("x", d3.forceX().x((d) => (d.cluster%7) * width/xDivisor - width*1.1).strength(0.8))
-            .force("y", d3.forceY().y((d) => (Math.floor(d.cluster/7)*(height/yDivisor) - height*1.2)).strength(0.8))
+            .force("x", d3.forceX().x((d) => (d.cluster%7) * width/xDivisor - width*1.1).strength((d) => {
+                console.log(d);
+                return d.parent.depth === 0 ? 1 : 0.01
+            }))
+            .force("y", d3.forceY().y((d) => (Math.floor(d.cluster/7)*(height/yDivisor) - height*1.2)).strength((d) => {
+                console.log(d);
+                return d.parent.depth === 0 ? 1 : 0.01
+            }))
             .alpha(0.15)
 
         const color = d3.scaleOrdinal()
@@ -498,7 +504,7 @@ class Data extends React.Component {
                 .attr('cursor', 'pointer')
                 .transition()
                 .duration(150)
-                .attr('r', (d) => d.children || d._children ? 10 : 8);
+                .attr('r', (d) => d.children || d._children ? 13 : 12);
         }
 
         function handleMouseOut() {
@@ -506,7 +512,7 @@ class Data extends React.Component {
             d3.select(this).transition()
                 .delay(30)
                 .duration(200)
-                .attr('r', (d) => d.children || d._children ? 7 : 6);
+                .attr('r', (d) => d.children || d._children ? 12 : 11);
         }
 
         // BLOB ME UP
