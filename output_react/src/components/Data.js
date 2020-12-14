@@ -337,17 +337,17 @@ class Data extends React.Component {
 
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.identity)
-                .distance((d) => (d.target.children || d.target._children) ? 45 : 15)
-                .strength(1.6))
+                .distance((d) => (d.target.children || d.target._children) ? 100 : 50)
+                .strength(1.2))
             .force("charge", d3.forceManyBody().strength((d) => {
                 return d.children || d._children ? -200 : -50;
             }))
             .force('collision', d3.forceCollide().radius(function(d) {
-                return d.children || d._children ? 15: 7;
+                return d.children || d._children ? 15: 11;
               }))
             .force("x", d3.forceX().x((d) => (d.cluster%7) * width/xDivisor - width*1.1).strength(0.8))
             .force("y", d3.forceY().y((d) => (Math.floor(d.cluster/7)*(height/yDivisor) - height*1.2)).strength(0.8))
-            .alpha(0.3)
+            .alpha(0.15)
 
         const color = d3.scaleOrdinal()
             .domain(data, (d) => d.name) 
@@ -471,7 +471,7 @@ class Data extends React.Component {
                     .attr('fill', (d) =>  d.children || d._children ? null : color(d.data.key))
                     .attr('stroke', (d) => d.children || d._children ? color(d.data.name) : '#fff')
                     .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
-                    .attr('r',  (d) => d.children || d._children ? 7 : 6)
+                    .attr('r',  (d) => d.children || d._children ? 11 : 10)
                     .on('click', click)
                     .on('mouseover', handleMouseOver)
                     .on('mouseout', handleMouseOut)
@@ -714,19 +714,19 @@ class Data extends React.Component {
             })
             .attr('class', 'hull');
 
-        let clusterLabels = forcePlot.selectAll('.cluster-labels')
+        forcePlot.selectAll('.cluster-labels')
             .data(clusters)
             .enter()
             .append('text')
-            .attr('dy', 25)
+            .attr('dy', 40)
             // .attr('width', 50)
             .append('textPath')
             .attr('xlink:href', (d, i) => `#${data[i].name}-path`)
             .style("text-anchor","middle")
-            .attr('startOffset', "50%")
-            
-            .attr('font-size', 25)
-            .attr('letter-spacing', 0.5)
+            .attr('startOffset', "60%")
+            .attr('font-size', 28)
+            .attr('font-family', 'Roboto')
+            .attr('letter-spacing', 0.02)
             .text((d, i) => data[i].name);
 
         let link = forcePlot.append('g')
@@ -746,7 +746,7 @@ class Data extends React.Component {
                 .attr('fill', (d) => d.children || d._children ? null : color(d.data.key))
                 .attr('stroke', d => d.children || d._children ? color(d.data.name) : '#fff')
                 .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
-                .attr('r', (d) => d.children || d._children ? 7 : 6)
+                .attr('r', (d) => d.children || d._children ? 11 : 10)
                 .on("click", click)
                 .on('mouseover', handleMouseOver)
                 .on('mouseout', handleMouseOut)
