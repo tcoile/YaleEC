@@ -1,4 +1,3 @@
-import { Stepper } from '@material-ui/core';
 import { makeStyles } from '@material-ui/core/styles';
 import React from 'react'
 import {withRouter} from 'react-router-dom'
@@ -24,11 +23,6 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-
-function getSteps() {
-    return ['Choose a Club', 'Contact Information', 'Add Information']
-}
-
 // function getStepContent(step) {
 //     switch (step) {
 //       case 0:
@@ -51,7 +45,7 @@ class ClubForm extends React.Component {
             activeStep: 0,
             email: "",
             clubName: this.props.location.state.clubName ? this.props.location.state.clubName : "",
-            activeClubIndex: undefined,
+            activeClubIndex: this.props.location.state.clubName ? 0 : -1,
             activeClubInfo: {},
             allClubs: []
         }
@@ -123,7 +117,7 @@ class ClubForm extends React.Component {
         const newObj = {
             Time: this.getCurrentDate(),
             Updater: this.state.email,
-            New: (this.state.activeClubIndex >= 0),
+            New: (this.state.activeClubIndex < 0),
             Name: value.name,
             Mission: value.mission,
             Tags: tagsAsString,
@@ -131,8 +125,7 @@ class ClubForm extends React.Component {
             Website: value.website,
             Contact: value.contact
         }
-        const row = await sheet.addRow(newObj);
-        console.log(row);
+        await sheet.addRow(newObj);
     }
 
     // from https://phoenixnap.com/kb/how-to-get-the-current-date-and-time-javascript

@@ -22,12 +22,11 @@ const styles = (theme) => ({
 class Step1 extends React.Component{
     constructor(props) {
         super(props);
-        console.log(this.props);
         this.state = {
-            oldClubName: this.props.activeClub == -1 ? undefined : this.props.clubName,
-            newClubName: this.props.activeClub == -1 ? this.props.clubName : '',
+            oldClubName: this.props.activeClub === -1 ? undefined : this.props.clubName,
+            newClubName: this.props.activeClub === -1 ? this.props.clubName : '',
             blankName: false,
-            chooseOrg: this.props.activeClub == -1 ? false : true
+            chooseOrg: this.props.activeClub === -1 ? false : true
         }
     }
 
@@ -62,7 +61,7 @@ class Step1 extends React.Component{
         } else {
             clubName = this.state.newClubName;
         }
-        this.props.setParentState("activeClubIndex", this.state.chooseOrg ? this.props.allClubNames.indexOf(this.state.oldClubName) : -1)
+        this.props.setParentState("activeClubIndex", this.props.allClubNames.indexOf(this.state.oldClubName))
         this.props.setParentState("clubName", clubName);
         this.props.handleNext();
     }
@@ -75,7 +74,7 @@ class Step1 extends React.Component{
                 <Autocomplete
                     onChange={this.handleChooseChange}
                     options={this.props.allClubNames}
-                    defaultValue={this.props.activeClub == -1 ? undefined : this.state.oldClubName}
+                    defaultValue={this.props.activeClub === -1 ? undefined : this.state.oldClubName}
                     style={{ width: 300 }}
                     renderInput={(params) => <TextField {...params} label="Organization Name" variant="outlined" />}
                 />
