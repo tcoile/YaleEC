@@ -82,14 +82,17 @@ class Clubpage extends React.Component{
             clubInfo.contacts.map((contact => <p className={classes.dense}> {contact} </p>))
             : <p className={classes.dense}> no contacts yet </p> 
 
+
+        const closeButton =               
+            <div style={{display: 'flex', alignItems: 'flex-start', alignContent: 'center'}}> 
+                <IconButton onClick={this.props.handleDrawerClose} style={{marginBlockStart: '1.15em'}}>
+                    <ChevronRightIcon/>
+                </IconButton>
+                <p className={classes.title}> {clubInfo.name} </p>
+            </div>    
         return (
             <div className={classes.drawerMain}>
-                <div style={{display: 'flex', alignItems: 'flex-start', alignContent: 'center'}}> 
-                    <IconButton onClick={this.props.handleDrawerClose} style={{marginBlockStart: '1.15em'}}>
-                        <ChevronRightIcon/>
-                    </IconButton>
-                    <p className={classes.title}> {clubInfo.name} </p>
-                </div>
+                {this.props.closeable ? closeButton : <div> <p className={classes.title}> {clubInfo.name} </p></div>}
                 <div className={classes.chipDiv}>{tagChips}</div>
                 <ReactPlayer width="100%" url={clubInfo.videoLink ? clubInfo.videoLink : 'https://www.youtube.com/watch?v=DLzxrzFCyOs'} />
                 <p style={{fontWeight: 'bold', fontSize: 'large'}}> Mission </p>

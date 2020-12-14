@@ -1,0 +1,23 @@
+.search-tooltip {
+    position: absolute;
+    opacity: 0.90;
+    height: auto;
+    padding: 4px;
+    background-color:  rgb(244, 244, 244);
+    border-radius: 10px;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    z-index: 100;
+}
+
+.search-tooltip.hidden {
+    display: none;
+}
+
+.search-tooltip p {
+    margin: 0;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 28px;
+    line-height: 32px;
+    color: black;
+}

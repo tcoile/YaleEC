@@ -138,7 +138,7 @@ class DataHolder extends React.Component{
             paper: classes.drawerPaper,
           }}
         >
-          <Clubpage handleDrawerClose={this.handleDrawerClose} clubInfo={this.state.clubInfo}/>
+          <Clubpage closeable={true} handleDrawerClose={this.handleDrawerClose} clubInfo={this.state.clubInfo}/>
         </Drawer>
       </div>
     );
