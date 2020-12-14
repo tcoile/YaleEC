@@ -5,6 +5,7 @@ import ReactPlayer from "react-player";
 import IconButton from '@material-ui/core/IconButton';
 import LanguageIcon from '@material-ui/icons/Language';
 import ChevronRightIcon from '@material-ui/icons/ChevronRight';
+import CloseIcon from '@material-ui/icons/Close';
 import MailOutlineIcon from '@material-ui/icons/MailOutline';
 import Chip from '@material-ui/core/Chip';
 
@@ -86,13 +87,13 @@ class Clubpage extends React.Component{
         const closeButton =               
             <div style={{display: 'flex', alignItems: 'flex-start', alignContent: 'center'}}> 
                 <IconButton onClick={this.props.handleDrawerClose} style={{marginBlockStart: '1.15em'}}>
-                    <ChevronRightIcon/>
+                    {this.props.closeable ? <ChevronRightIcon/> : <CloseIcon/>}
                 </IconButton>
                 <p className={classes.title}> {clubInfo.name} </p>
             </div>    
         return (
             <div className={classes.drawerMain}>
-                {this.props.closeable ? closeButton : <div> <p className={classes.title}> {clubInfo.name} </p></div>}
+                {closeButton}
                 <div className={classes.chipDiv}>{tagChips}</div>
                 <ReactPlayer width="100%" url={clubInfo.videoLink ? clubInfo.videoLink : 'https://www.youtube.com/watch?v=DLzxrzFCyOs'} />
                 <p style={{fontWeight: 'bold', fontSize: 'large'}}> Mission </p>

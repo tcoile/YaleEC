@@ -3,23 +3,20 @@ import { withStyles } from '@material-ui/core/styles';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import * as d3 from "d3";
 
-import Drawer from '@material-ui/core/Drawer';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
+import Dialog from '@material-ui/core/Dialog';
 import Checkbox from '@material-ui/core/Checkbox';
-import Input from '@material-ui/core/Input';
-import ListItemText from '@material-ui/core/ListItemText';
 import TextField from '@material-ui/core/TextField';
-import Divider from '@material-ui/core/Divider';
-import SearchIcon from '@material-ui/icons/Search';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import CheckBoxOutlineBlankIcon from '@material-ui/icons/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@material-ui/icons/CheckBox';
 
 import Clubpage from './Clubpage';
 import './Search.css'
 import { color } from 'd3';
 
 const drawerWidth = 45;
-const width = 750;
-const height = 490;
+const width = 1280;
+const height = 550;
 const averageRadius = 5;
 
 const tags = ['AACC Affiliate Org', 
@@ -69,10 +66,10 @@ const tags = ['AACC Affiliate Org',
 const MenuProps = {
     PaperProps: {
         style: {
-        width: 400,
+            width: 400,
         },
     },
-    };
+};
 
 const styles = theme => ({
     horiFlex: {
@@ -85,7 +82,8 @@ const styles = theme => ({
         paddingLeft: 20,
         paddingRight: 20,
         display: 'flex',
-        flexDirection: 'column'
+        flexDirection: 'row',
+        justifyContent: 'center'
     },
     searchInput: {
         fontSize: 20,
@@ -117,6 +115,10 @@ const styles = theme => ({
         marginRight: 30,
         marginBottom: 30
     },
+    dialogPaper: {
+        maxWidth: 800,
+        minWidth: 800
+    }
 })
 
 class Search extends React.Component{
@@ -141,13 +143,13 @@ class Search extends React.Component{
         d3.select('#search-tooltip')
             .style('top', `${yPos}px`)
             .style('left', () => {
-                if (xPos > width/2) {
+                if (xPos <= width/2) {
                     return '';
                 } return `${xPos}px`})
             .style('right', () => {
-                if (xPos <= width/2) {
+                if (xPos > width/2) {
                     return '';
-                } return `${xPos}px`
+                } return `${width - xPos}px`
             })
             .html(`<p>${data.name}</p>`)
             .classed('hidden', false);
@@ -187,7 +189,7 @@ class Search extends React.Component{
             .attr('transform', `translate(${width/2}, ${height/2})`);
         
         const simulation = d3.forceSimulation(parsedData)
-            .force("charge", d3.forceManyBody().strength(-5))
+            .force("charge", d3.forceManyBody().strength(-14))
             .force('collision', d3.forceCollide().radius(averageRadius + 3))
             .force("x", d3.forceX())
             .force("y", d3.forceY())
@@ -285,9 +287,9 @@ class Search extends React.Component{
         this.updateCircles(event.target.value, this.state.tags);
     }
 
-    handleTagChange = (event) => {
-        this.setState({tags: event.target.value});
-        this.updateCircles(this.state.searchTerm, event.target.value);
+    handleTagChange = (event, value) => {
+        this.setState({tags: value});
+        this.updateCircles(this.state.searchTerm, value);
     }
     
     handleDrawerOpen () {
@@ -305,6 +307,8 @@ class Search extends React.Component{
 
     render() {
         const { classes } = this.props;
+        const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+        const checkedIcon = <CheckBoxIcon fontSize="small" />;
         return (
             <div>
                 <CssBaseline/>
@@ -317,7 +321,7 @@ class Search extends React.Component{
                             style={{width: '40%', marginRight: 20}}
                             onChange={this.handleChange}
                             ></TextField>
-                        <Select
+                        {/* <Select
                             label="Filter by tags"
                             id="demo-mutiple-checkbox"
                             multiple
@@ -334,12 +338,33 @@ class Search extends React.Component{
                                 <ListItemText primary={tag} />
                                 </MenuItem>
                             ))}
-                        </Select>
+                        </Select> */}
+                        <Autocomplete
+                            multiple
+                            options={tags}
+                            disableCloseOnSelect
+                            onChange={this.handleTagChange}
+                            renderOption={(tag, { selected }) => (
+                                <React.Fragment>
+                                <Checkbox
+                                    icon={icon}
+                                    checkedIcon={checkedIcon}
+                                    style={{ marginRight: 8 }}
+                                    checked={selected}
+                                />
+                                {tag}
+                                </React.Fragment>
+                            )}
+                            style={{ width: 500 }}
+                            renderInput={(params) => (
+                                <TextField {...params} variant="standard" label="Filter by tags" />
+                            )}
+                        />
                     </div>
                         <div id="search-viz" style={{position: 'relative', width: width}}>
                             <div id="search-tooltip" class="search-tooltip hidden"></div>
                         </div>
-                <Drawer
+                {/* <Drawer
                     className={classes.drawer}
                     variant="persistent"
                     anchor="right"
@@ -349,7 +374,14 @@ class Search extends React.Component{
                     }}
                 >
                     {this.state.clubInfo ? <Clubpage closeable={false} handleDrawerClose={this.handleDrawerClose} clubInfo={this.state.clubInfo}/> : <p> select a club to see more information </p>}
-                </Drawer>
+                </Drawer> */}
+                <Dialog open={this.state.open} classes={{
+                        paper: classes.dialogPaper,
+                    }}>
+                    {/* <Paper className={classes.modalPaper}> */}
+                        {this.state.clubInfo ? <Clubpage closeable={false} handleDrawerClose={this.handleDrawerClose} clubInfo={this.state.clubInfo}/> : <p> select a club to see more information </p>}
+                    {/* </Paper> */}
+                </Dialog>
             </div>
         )
     }
