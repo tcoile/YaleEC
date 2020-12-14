@@ -5,6 +5,8 @@ import {withRouter} from 'react-router-dom'
 import Step1 from './Steps/Step1';
 import Step2 from './Steps/Step2';
 import Step3 from './Steps/Step3';
+import Step4 from './Steps/Step4';
+
 
 const {GoogleSpreadsheet} = require('google-spreadsheet');
 
@@ -22,20 +24,6 @@ const useStyles = makeStyles((theme) => ({
       marginBottom: theme.spacing(1),
     },
 }));
-
-// function getStepContent(step) {
-//     switch (step) {
-//       case 0:
-//         return getSteps();
-//       case 1:
-//         return <Step2/>;
-//       case 2:
-//         return <Step3/>;;
-//       default:
-//         return 'Unknown step';
-//     }
-//   }
-
 
 // then put it all together into a form
 class ClubForm extends React.Component {
@@ -126,6 +114,7 @@ class ClubForm extends React.Component {
             Contact: value.contact
         }
         await sheet.addRow(newObj);
+        this.setState({activeStep: this.state.activeStep + 1});
     }
 
     // from https://phoenixnap.com/kb/how-to-get-the-current-date-and-time-javascript
@@ -155,6 +144,8 @@ class ClubForm extends React.Component {
                             handleBack={this.handleBack}
                             handleSubmit={this.handleSubmit}
                             />
+            case 3:
+                return <Step4 />
             default:
                 return <Step1/>
         }
@@ -164,8 +155,6 @@ class ClubForm extends React.Component {
         return (
             <div>
                 {this.switchSteps()}
-                {/* <Step2 setEmail={this.setEmail} handleNext={this.handleNext} /> */}
-                {/* <Step3 clubName="Yale Ramona"/> */}
             </div>
         )
     }

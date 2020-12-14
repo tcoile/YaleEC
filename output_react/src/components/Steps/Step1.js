@@ -1,11 +1,7 @@
 import React from 'react'
-import Select from '@material-ui/core/Select';
 import Button from '@material-ui/core/Button';
-import MenuItem from '@material-ui/core/MenuItem';
 import TextField from '@material-ui/core/TextField';
 import Autocomplete from '@material-ui/lab/Autocomplete';
-import Input from '@material-ui/core/Input';
-import DividerWithText from './DividerWithText.js';
 import { withStyles } from '@material-ui/core/styles';
 
 
@@ -67,7 +63,6 @@ class Step1 extends React.Component{
     }
 
     render() {
-        const { classes }  = this.props;
         const chooseOrg = (
             <div>
                 <h3> Choose Your Organization </h3>
@@ -75,7 +70,7 @@ class Step1 extends React.Component{
                     onChange={this.handleChooseChange}
                     options={this.props.allClubNames}
                     defaultValue={this.props.activeClub === -1 ? undefined : this.state.oldClubName}
-                    style={{ width: 300 }}
+                    style={{ width: 600 }}
                     renderInput={(params) => <TextField {...params} label="Organization Name" variant="outlined" />}
                 />
                 <p 
@@ -91,6 +86,7 @@ class Step1 extends React.Component{
             <div>
                 <h3> New Organization Name </h3>
                 <TextField 
+                    style={{ width: 600 }}
                     required 
                     error={this.state.blankName} 
                     defaultValue={this.props.activeClub === -1 ? this.props.clubName : ''} 
