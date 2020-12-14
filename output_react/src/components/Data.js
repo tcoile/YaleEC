@@ -326,18 +326,28 @@ class Data extends React.Component {
         /**
          * Create force simulation, color schemes, and overall svg
          */
+        const width = 1000;
+        const height = 490;
+        const xDivisor = 2.5;
+        const yDivisor = 1.4;
+        nodes.forEach((node) => {
+            node.x = (node.cluster%7) * width/xDivisor - width*1.1; 
+            node.y = Math.floor(node.cluster/7)*(height/yDivisor) - height*1.2;
+        })
+
         const simulation = d3.forceSimulation(nodes)
             .force("link", d3.forceLink(links).id(d => d.identity)
-                .distance((d) => (d.target.children || d.target._children) ? 35 : 10)
-                .strength(1.6))
+                .distance((d) => (d.target.children || d.target._children) ? 100 : 50)
+                .strength(1.2))
             .force("charge", d3.forceManyBody().strength((d) => {
                 return d.children || d._children ? -200 : -50;
             }))
             .force('collision', d3.forceCollide().radius(function(d) {
-                return d.children || d._children ? 15: 7;
+                return d.children || d._children ? 15: 11;
               }))
-            .force("x", d3.forceX())
-            .force("y", d3.forceY())
+            .force("x", d3.forceX().x((d) => (d.cluster%7) * width/xDivisor - width*1.1).strength(0.8))
+            .force("y", d3.forceY().y((d) => (Math.floor(d.cluster/7)*(height/yDivisor) - height*1.2)).strength(0.8))
+            .alpha(0.15)
 
         const color = d3.scaleOrdinal()
             .domain(data, (d) => d.name) 
@@ -345,7 +355,6 @@ class Data extends React.Component {
 
         // Enable zooming, panning
         function zoomed({transform}) {
-            // console.log(transform)
             currentScale = transform.k
             forcePlot.attr("transform", transform);
         }
@@ -356,8 +365,7 @@ class Data extends React.Component {
             .scaleExtent([0.3, 3])
             .on("zoom", zoomed);
 
-        const width = 1000;
-        const height = 490;
+        
     
         const forceSvg = d3.select(this._rootNode)
             .append('svg')
@@ -369,11 +377,11 @@ class Data extends React.Component {
         const forcePlot = forceSvg.append('g')
 
         forceSvg.call(zoom.translateTo,
-            650,
-            450); // note? WHY???? 
+            550,
+            300); // note? WHY???? 
         forceSvg.transition().duration(400).call(
             zoom.scaleTo,
-            0.3);    
+            0.5);    
         /**
          * Interactivity
          */
@@ -463,7 +471,7 @@ class Data extends React.Component {
                     .attr('fill', (d) =>  d.children || d._children ? null : color(d.data.key))
                     .attr('stroke', (d) => d.children || d._children ? color(d.data.name) : '#fff')
                     .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
-                    .attr('r',  (d) => d.children || d._children ? 7 : 6)
+                    .attr('r',  (d) => d.children || d._children ? 11 : 10)
                     .on('click', click)
                     .on('mouseover', handleMouseOver)
                     .on('mouseout', handleMouseOut)
@@ -562,6 +570,8 @@ class Data extends React.Component {
             
             convexHull.data(clusters)
                 .join('path')
+            // convexHull.transition()
+            //     .duration(600)
                 .attr('d', (d) => {
                     const points = groupPath(d);
                     return smoothHull(points);
@@ -573,6 +583,10 @@ class Data extends React.Component {
                 .attr('opacity', 0.08)
                 .on('click', centerZoomBlob);
 
+            // update labels here too 
+            // clusterLabels.data(clusters)
+                
+
             forceSvg.attr('viewBox', [-window.innerWidth/2, -window.innerHeight/2, window.innerWidth, window.innerHeight])
         })
 
@@ -581,7 +595,7 @@ class Data extends React.Component {
          * but am using because I WANT THE PRETTY: 
          * http://bl.ocks.org/hollasch/9d3c098022f5524220bd84aae7623478
          */
-        const hullPadding = 40;
+        const hullPadding = 35;
 
         // Point/Vector Operations
 
@@ -695,7 +709,25 @@ class Data extends React.Component {
         let convexHull = forcePlot.selectAll('.blob')
             .data(clusters)
             .join('path')
+            .attr('id', (d, i) => {
+                return `${data[i].name}-path`
+            })
             .attr('class', 'hull');
+
+        forcePlot.selectAll('.cluster-labels')
+            .data(clusters)
+            .enter()
+            .append('text')
+            .attr('dy', 40)
+            // .attr('width', 50)
+            .append('textPath')
+            .attr('xlink:href', (d, i) => `#${data[i].name}-path`)
+            .style("text-anchor","middle")
+            .attr('startOffset', "60%")
+            .attr('font-size', 28)
+            .attr('font-family', 'Roboto')
+            .attr('letter-spacing', 0.02)
+            .text((d, i) => data[i].name);
 
         let link = forcePlot.append('g')
                 .attr('stroke', '#999')
@@ -714,7 +746,7 @@ class Data extends React.Component {
                 .attr('fill', (d) => d.children || d._children ? null : color(d.data.key))
                 .attr('stroke', d => d.children || d._children ? color(d.data.name) : '#fff')
                 .attr('stroke-width', (d) => d.children || d._children ? 2 : 1)
-                .attr('r', (d) => d.children || d._children ? 7 : 6)
+                .attr('r', (d) => d.children || d._children ? 11 : 10)
                 .on("click", click)
                 .on('mouseover', handleMouseOver)
                 .on('mouseout', handleMouseOut)
