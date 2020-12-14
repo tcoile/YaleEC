@@ -12,7 +12,6 @@ import CheckBoxIcon from '@material-ui/icons/CheckBox';
 
 import Clubpage from './Clubpage';
 import './Search.css'
-import { color } from 'd3';
 
 const drawerWidth = 45;
 const width = 1280;
@@ -62,14 +61,6 @@ const tags = ['AACC Affiliate Org',
     'Sports/Outdoors',
     'Student Government',
     'Veteran/Military']
-
-const MenuProps = {
-    PaperProps: {
-        style: {
-            width: 400,
-        },
-    },
-};
 
 const styles = theme => ({
     horiFlex: {
@@ -153,21 +144,26 @@ class Search extends React.Component{
             })
             .html(`<p>${data.name}</p>`)
             .classed('hidden', false);
+        d3.select(this).transition()
+            .duration(300)
+            // .attr('fill', (d) => (d.name === data.name) ? d3.rgb(d.key).darker(1) : d3.rgb(d.key))
+            .attr('r', (d) => (d.name === data.name) ? d.radius + 4 : d.radius)
     }
 
     handleMouseOut() {
         d3.select('#search-tooltip')
             .classed('hidden', true);
+        d3.select(this).transition()
+            .duration(400)
+            .attr('fill', (d) => d3.rgb(d.key))
+            .attr('r', (d) => (d.radius));
     }
 
     async handleClick(event, data){
-        console.log(data);
-        console.log(this)
         this.state.node.transition()
             .duration(750)
             .attr('fill', (d) => (d.name === data.name) ? d3.rgb(d.key).darker(1) : d3.rgb(d.key))
             .attr('r', (d) => (d.name === data.name) ? d.radius + 1 : d.radius);
-        
         this.selectClub(data);
     }
 

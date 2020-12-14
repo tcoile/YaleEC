@@ -45,11 +45,17 @@ const useStyles = makeStyles((theme) => ({
   title: {
     flexGrow: 1,
     color: 'black',
+    cursor: 'pointer'
   },
   appBar: {
     zIndex: theme.zIndex.drawer + 1,
   }
 }));
+
+function handleClick() {
+  console.log("getting clicked");
+  window.location.replace('http://localhost:5000/home'); 
+}
 
 export default function App() {
   const classes = useStyles(); // pass theme object in in order to use it
@@ -61,7 +67,7 @@ export default function App() {
           <div className={classes.appRoot}>
             <AppBar style={{backgroundColor: '#fff'}} position="fixed">
               <Toolbar>
-                <Typography variant="h6" className={classes.title}>
+                <Typography variant="h6" className={classes.title} onClick={handleClick}>
                   Yale Extracurricular Search
                 </Typography>
                 <Button style={{color: '#4f79a7'}} component={Link} to="/explore">Explore</Button>
